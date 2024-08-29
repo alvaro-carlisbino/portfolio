@@ -27,6 +27,15 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+
+flutter_launcher_icons:
+  image_path: "assets/ac_logo.png"
+  web:
+    generate: true
+    image_path: "path/to/image.png"
+    background_color: "#hexcode"
+    theme_color: "#hexcode"
+
 dependencies:
   flutter:
     sdk: flutter
