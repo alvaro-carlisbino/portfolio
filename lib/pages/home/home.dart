@@ -6,6 +6,7 @@ import 'package:repositoriobryzzen/utils/colors.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:simple_icons/simple_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:get/get.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -44,40 +45,150 @@ class _HomePageState extends State<HomePage> {
                                   ? RepoColors.blackBackgroundColor
                                   : Colors.white,
                             ))),
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(top: 20, bottom: 20, right: 20),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: darkThemeIsEnabled == false
-                              ? Colors.white
-                              : RepoColors.blackContainerColor,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: RepoColors.blackBackgroundColor
-                                  .withOpacity(0.1),
-                              spreadRadius: 1,
-                              blurRadius: 1,
-                              offset: const Offset(0, 1),
+                    Container(
+                      margin: EdgeInsets.only(right: 30),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(10),
+                            margin: EdgeInsets.only(right: 20),
+                            decoration: BoxDecoration(
+                              color: darkThemeIsEnabled == false
+                                  ? Colors.white
+                                  : RepoColors.blackContainerColor,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: RepoColors.blackBackgroundColor
+                                      .withOpacity(0.1),
+                                  spreadRadius: 1,
+                                  blurRadius: 1,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.brightness_4,
-                            color: darkThemeIsEnabled == false
-                                ? RepoColors.blackBackgroundColor
-                                : Colors.white,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.brightness_4,
+                                color: darkThemeIsEnabled == false
+                                    ? RepoColors.blackBackgroundColor
+                                    : Colors.white,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  darkThemeIsEnabled = !darkThemeIsEnabled;
+                                });
+                              },
+                            ),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              darkThemeIsEnabled = !darkThemeIsEnabled;
-                            });
-                          },
-                        ),
+                          Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: darkThemeIsEnabled == false
+                                  ? Colors.white
+                                  : RepoColors.blackContainerColor,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: RepoColors.blackBackgroundColor
+                                      .withOpacity(0.1),
+                                  spreadRadius: 1,
+                                  blurRadius: 1,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.translate,
+                                color: darkThemeIsEnabled == false
+                                    ? RepoColors.blackBackgroundColor
+                                    : Colors.white,
+                              ),
+                              onPressed: () {
+                                Get.defaultDialog(
+                                  title: "Select a language",
+                                  titleStyle: GoogleFonts.poppins(
+                                    fontSize: 2.sw,
+                                    fontWeight: FontWeight.bold,
+                                    color: darkThemeIsEnabled == false
+                                        ? RepoColors.blackBackgroundColor
+                                        : Colors.white,
+                                  ),
+                                  backgroundColor: darkThemeIsEnabled == false
+                                      ? RepoColors.whiteContainerColor
+                                      : RepoColors.blackContainerColor,
+                                  content: Column(
+                                    children: [
+                                      ListTile(
+                                        title: Text("English",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 2.sw,
+                                              color: darkThemeIsEnabled == false
+                                                  ? RepoColors
+                                                      .blackBackgroundColor
+                                                  : Colors.white,
+                                            )),
+                                        onTap: () {
+                                          Get.updateLocale(
+                                              const Locale('en', 'US'));
+                                          Get.back();
+                                        },
+                                      ),
+                                      ListTile(
+                                        title: Text("Português",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 2.sw,
+                                              color: darkThemeIsEnabled == false
+                                                  ? RepoColors
+                                                      .blackBackgroundColor
+                                                  : Colors.white,
+                                            )),
+                                        onTap: () {
+                                          Get.updateLocale(
+                                              const Locale('pt', 'BR'));
+                                          Get.back();
+                                        },
+                                      ),
+                                      ListTile(
+                                        title: Text("Español",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 2.sw,
+                                              color: darkThemeIsEnabled == false
+                                                  ? RepoColors
+                                                      .blackBackgroundColor
+                                                  : Colors.white,
+                                            )),
+                                        onTap: () {
+                                          Get.updateLocale(
+                                              const Locale('es', 'ES'));
+                                          Get.back();
+                                        },
+                                      ),
+                                      ListTile(
+                                        title: Text("日本語",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 2.sw,
+                                              color: darkThemeIsEnabled == false
+                                                  ? RepoColors
+                                                      .blackBackgroundColor
+                                                  : Colors.white,
+                                            )),
+                                        onTap: () {
+                                          Get.updateLocale(
+                                              const Locale('jp', 'JP'));
+                                          Get.back();
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -120,7 +231,7 @@ class _HomePageState extends State<HomePage> {
                       padding: const EdgeInsets.only(
                           top: 20, bottom: 20, left: 20, right: 20),
                       child: Text(
-                        "Desenvolvedor Full-Stack",
+                        "dev_fullstack".tr,
                         style: GoogleFonts.poppins(
                           fontSize: 3.sw,
                           fontWeight: FontWeight.w400,
@@ -135,7 +246,7 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.only(
                             top: 20, bottom: 20, left: 20, right: 20),
                         child: Text(
-                          "👋 Bem-vindo ao meu portfólio! Aqui, transformo ideias em soluções inovadoras através de código.",
+                          "welcome_port".tr,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.poppins(
                             fontSize: 2.sw,
@@ -190,14 +301,14 @@ class _HomePageState extends State<HomePage> {
                           return Builder(
                             builder: (BuildContext context) {
                               var nomes = [
-                                "Inova Agro 2024 - 1º Lugar",
-                                "Deco.cx HACKATHON 4° Edição - 2º Lugar",
-                                "Hackathon CTWF 2024 - 1º Lugar"
+                                "inova_agro".tr,
+                                "deco_cx".tr,
+                                "ctfw".tr
                               ];
                               var desc = [
-                                "📦 Projeto de box de cultivo para hortaliças",
-                                "🏪 E-commerce para o time de E-Sports Fluxo, com design inovador e exclusivo",
-                                "🤖 I.A. para previsão de tendências futuras no setor têxtil."
+                                "monobox".tr,
+                                "fluxus".tr,
+                                "cianorte".tr
                               ];
                               var fotos = [
                                 "assets/inovaagro.jpg",
@@ -321,7 +432,7 @@ class _HomePageState extends State<HomePage> {
                         margin: const EdgeInsets.only(top: 40, left: 40),
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          "Projetos",
+                          "projects".tr,
                           textAlign: TextAlign.start,
                           style: GoogleFonts.montserrat(
                             fontSize: 5.sw,
@@ -367,7 +478,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     const SizedBox(height: 20),
                                     Text(
-                                      "🤖 Chatbot para o Colégio SESI, simplificando a comunicação.",
+                                      "sesi".tr,
                                       style: GoogleFonts.roboto(
                                         fontSize: 2.sw,
                                         color: darkThemeIsEnabled == false
@@ -390,7 +501,7 @@ class _HomePageState extends State<HomePage> {
                                               BorderRadius.circular(10),
                                         ),
                                         child: Text(
-                                          "Veja mais sobre o projeto",
+                                          "see_more".tr,
                                           style: GoogleFonts.poppins(
                                             fontSize: 2.sw,
                                             color: darkThemeIsEnabled == false
@@ -432,7 +543,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     const SizedBox(height: 20),
                                     Text(
-                                      "💻 RestAPI simples em golang para estudo",
+                                      "golangapi".tr,
                                       style: GoogleFonts.roboto(
                                         fontSize: 2.sw,
                                         color: darkThemeIsEnabled == false
@@ -455,7 +566,7 @@ class _HomePageState extends State<HomePage> {
                                               BorderRadius.circular(10),
                                         ),
                                         child: Text(
-                                          "Veja mais sobre o projeto",
+                                          "see_more".tr,
                                           style: GoogleFonts.poppins(
                                             fontSize: 2.sw,
                                             color: darkThemeIsEnabled == false
@@ -497,7 +608,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     const SizedBox(height: 20),
                                     Text(
-                                      "🐸 Projeto simples de Pokédex Pokémon para estudo de HTML",
+                                      "pokedex".tr,
                                       style: GoogleFonts.roboto(
                                         fontSize: 2.sw,
                                         color: darkThemeIsEnabled == false
@@ -520,7 +631,7 @@ class _HomePageState extends State<HomePage> {
                                               BorderRadius.circular(10),
                                         ),
                                         child: Text(
-                                          "Veja mais sobre o projeto",
+                                          "see_more".tr,
                                           style: GoogleFonts.poppins(
                                             fontSize: 2.sw,
                                             color: darkThemeIsEnabled == false
@@ -561,7 +672,7 @@ class _HomePageState extends State<HomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "© 2024 Alvaro Carlisbino. Todos os direitos reservados.",
+                          "copy".tr,
                           style: GoogleFonts.poppins(
                             fontSize: 1.5.sw,
                             color: darkThemeIsEnabled == false
