@@ -672,7 +672,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 20),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           "copy".tr,
@@ -683,45 +683,72 @@ class _HomePageState extends State<HomePage> {
                                 : Colors.white,
                           ),
                         ),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                Icons.linked_camera,
-                                color: darkThemeIsEnabled == false
-                                    ? RepoColors.blackBackgroundColor
-                                    : Colors.white,
+                        Container(
+                          margin: EdgeInsets.only(left: 100),
+                          child: Row(
+                            children: [
+                              TextButton.icon(
+                                icon: Icon(
+                                  Icons.linked_camera,
+                                  color: darkThemeIsEnabled == false
+                                      ? RepoColors.blackBackgroundColor
+                                      : Colors.white,
+                                ),
+                                label: Text(
+                                  "Meu Linkedin",
+                                  style: TextStyle(
+                                    color: darkThemeIsEnabled == false
+                                        ? RepoColors.blackBackgroundColor
+                                        : Colors.white,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  launchUrl(Uri.parse(
+                                      "https://www.linkedin.com/in/alvaro-carlisbino/"));
+                                },
                               ),
-                              onPressed: () {
-                                launchUrl(Uri.parse(
-                                    "https://www.linkedin.com/in/alvaro-carlisbino/"));
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                SimpleIcons.github,
-                                color: darkThemeIsEnabled == false
-                                    ? RepoColors.blackBackgroundColor
-                                    : Colors.white,
+                              TextButton.icon(
+                                icon: Icon(
+                                  SimpleIcons.github,
+                                  color: darkThemeIsEnabled == false
+                                      ? RepoColors.blackBackgroundColor
+                                      : Colors.white,
+                                ),
+                                label: Text(
+                                  "Meu GitHub",
+                                  style: TextStyle(
+                                    color: darkThemeIsEnabled == false
+                                        ? RepoColors.blackBackgroundColor
+                                        : Colors.white,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  launchUrl(Uri.parse(
+                                      "https://github.com/alvaro-carlisbino"));
+                                },
                               ),
-                              onPressed: () {
-                                launchUrl(Uri.parse(
-                                    "https://github.com/alvaro-carlisbino"));
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                Icons.email,
-                                color: darkThemeIsEnabled == false
-                                    ? RepoColors.blackBackgroundColor
-                                    : Colors.white,
+                              TextButton.icon(
+                                icon: Icon(
+                                  Icons.email,
+                                  color: darkThemeIsEnabled == false
+                                      ? RepoColors.blackBackgroundColor
+                                      : Colors.white,
+                                ),
+                                label: Text(
+                                  "Meu Email",
+                                  style: TextStyle(
+                                    color: darkThemeIsEnabled == false
+                                        ? RepoColors.blackBackgroundColor
+                                        : Colors.white,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  launchUrl(Uri.parse(
+                                      "mailto:alvaromathe123@gmail.com"));
+                                },
                               ),
-                              onPressed: () {
-                                launchUrl(Uri.parse(
-                                    "mailto:alvaromathe123@gmail.com"));
-                              },
-                            ),
-                          ],
+                            ],
+                          ),
                         )
                       ],
                     ),
