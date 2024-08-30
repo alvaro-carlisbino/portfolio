@@ -29,12 +29,22 @@ environment:
 # versions available, run `flutter pub outdated`.
 
 flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: false
   image_path: "assets/ac_logo.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
   web:
     generate: true
-    image_path: "path/to/image.png"
+    image_path: "assets/ac_logo.png"
     background_color: "#hexcode"
     theme_color: "#hexcode"
+  windows:
+    generate: false
+    image_path: "assets/ac_logo.png"
+    icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: false
+    image_path: "assets/ac_logo.png"
 
 dependencies:
   flutter:
@@ -49,6 +59,7 @@ dependencies:
   responsive_builder: ^0.7.1
   flutter_carousel_widget: ^2.3.0
   url_launcher: ^6.3.0
+  flutter_launcher_icons: "^0.13.1"
 
 dev_dependencies:
   flutter_test:

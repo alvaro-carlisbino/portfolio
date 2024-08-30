@@ -319,48 +319,50 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Container(
-                              margin:
-                                  EdgeInsets.only(top: 50, left: 50, right: 50),
-                              padding: EdgeInsets.only(
-                                  top: 20, bottom: 20, left: 20, right: 20),
-                              decoration: BoxDecoration(
-                                border: Border.all(
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          return Wrap(
+                            alignment: WrapAlignment.spaceEvenly,
+                            spacing: 20,
+                            runSpacing: 20,
+                            children: [
+                              Container(
+                                width: constraints.maxWidth < 600
+                                    ? constraints.maxWidth * 0.8
+                                    : constraints.maxWidth * 0.3,
+                                margin: EdgeInsets.only(top: 50, left: 50),
+                                padding: EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
                                     color: RepoColors.blackBackgroundColor,
-                                    width: 2),
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    "Assistente-Virtual-SESI",
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 3.sw,
-                                      fontWeight: FontWeight.bold,
-                                      color: darkThemeIsEnabled == false
-                                          ? RepoColors.blackBackgroundColor
-                                          : Colors.white,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      "Assistente-Virtual-SESI",
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 3.sw,
+                                        fontWeight: FontWeight.bold,
+                                        color: darkThemeIsEnabled == false
+                                            ? RepoColors.blackBackgroundColor
+                                            : Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    height: 20,
-                                  ),
-                                  Text(
-                                    "🤖 Chatbot para o Colégio SESI, simplificando a comunicação.",
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 2.sw,
-                                      color: darkThemeIsEnabled == false
-                                          ? RepoColors.blackBackgroundColor
-                                          : Colors.white,
+                                    SizedBox(height: 20),
+                                    Text(
+                                      "🤖 Chatbot para o Colégio SESI, simplificando a comunicação.",
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 2.sw,
+                                        color: darkThemeIsEnabled == false
+                                            ? RepoColors.blackBackgroundColor
+                                            : Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    height: 20,
-                                  ),
-                                  TextButton(
+                                    SizedBox(height: 20),
+                                    TextButton(
                                       onPressed: () {
                                         launchUrl(Uri.parse(
                                             "https://github.com/alvaro-carlisbino/Assistente-Virtual-SESI"));
@@ -368,10 +370,11 @@ class _HomePageState extends State<HomePage> {
                                       child: Container(
                                         padding: EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                            color:
-                                                RepoColors.blackBackgroundColor,
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
+                                          color:
+                                              RepoColors.blackBackgroundColor,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
                                         child: Text(
                                           "Veja mais sobre o projeto",
                                           style: GoogleFonts.poppins(
@@ -382,47 +385,48 @@ class _HomePageState extends State<HomePage> {
                                                 : Colors.white,
                                           ),
                                         ),
-                                      ))
-                                ],
-                              )),
-                          Container(
-                              margin: EdgeInsets.only(top: 50, left: 50),
-                              padding: EdgeInsets.only(
-                                  top: 20, bottom: 20, left: 20, right: 20),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: RepoColors.blackBackgroundColor,
-                                    width: 2),
-                                borderRadius: BorderRadius.circular(15),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    "GolangAPI",
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 3.sw,
-                                      fontWeight: FontWeight.bold,
-                                      color: darkThemeIsEnabled == false
-                                          ? RepoColors.blackBackgroundColor
-                                          : Colors.white,
+                              Container(
+                                width: constraints.maxWidth < 600
+                                    ? constraints.maxWidth * 0.8
+                                    : constraints.maxWidth * 0.3,
+                                margin: EdgeInsets.only(top: 50, left: 50),
+                                padding: EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: RepoColors.blackBackgroundColor,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      "GolangAPI",
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 3.sw,
+                                        fontWeight: FontWeight.bold,
+                                        color: darkThemeIsEnabled == false
+                                            ? RepoColors.blackBackgroundColor
+                                            : Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    height: 20,
-                                  ),
-                                  Text(
-                                    "💻 RestAPI simples em golang para estudo",
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 2.sw,
-                                      color: darkThemeIsEnabled == false
-                                          ? RepoColors.blackBackgroundColor
-                                          : Colors.white,
+                                    SizedBox(height: 20),
+                                    Text(
+                                      "💻 RestAPI simples em golang para estudo",
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 2.sw,
+                                        color: darkThemeIsEnabled == false
+                                            ? RepoColors.blackBackgroundColor
+                                            : Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    height: 20,
-                                  ),
-                                  TextButton(
+                                    SizedBox(height: 20),
+                                    TextButton(
                                       onPressed: () {
                                         launchUrl(Uri.parse(
                                             "https://github.com/alvaro-carlisbino/GolangAPI"));
@@ -430,10 +434,11 @@ class _HomePageState extends State<HomePage> {
                                       child: Container(
                                         padding: EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                            color:
-                                                RepoColors.blackBackgroundColor,
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
+                                          color:
+                                              RepoColors.blackBackgroundColor,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
                                         child: Text(
                                           "Veja mais sobre o projeto",
                                           style: GoogleFonts.poppins(
@@ -444,47 +449,49 @@ class _HomePageState extends State<HomePage> {
                                                 : Colors.white,
                                           ),
                                         ),
-                                      ))
-                                ],
-                              )),
-                          Container(
-                              margin: EdgeInsets.only(top: 50, left: 50),
-                              padding: EdgeInsets.only(
-                                  top: 20, bottom: 20, left: 20, right: 20),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: RepoColors.blackBackgroundColor,
-                                    width: 2),
-                                borderRadius: BorderRadius.circular(15),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    "Pokedex",
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 3.sw,
-                                      fontWeight: FontWeight.bold,
-                                      color: darkThemeIsEnabled == false
-                                          ? RepoColors.blackBackgroundColor
-                                          : Colors.white,
+                              Container(
+                                width: constraints.maxWidth < 600
+                                    ? constraints.maxWidth * 0.8
+                                    : constraints.maxWidth * 0.3,
+                                margin: EdgeInsets.only(
+                                    top: 50, left: 50, right: 50),
+                                padding: EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: RepoColors.blackBackgroundColor,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      "Pokedex",
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 3.sw,
+                                        fontWeight: FontWeight.bold,
+                                        color: darkThemeIsEnabled == false
+                                            ? RepoColors.blackBackgroundColor
+                                            : Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    height: 20,
-                                  ),
-                                  Text(
-                                    "🐸 Projeto simples de Pokédex Pokémon para estudo de HTML",
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 2.sw,
-                                      color: darkThemeIsEnabled == false
-                                          ? RepoColors.blackBackgroundColor
-                                          : Colors.white,
+                                    SizedBox(height: 20),
+                                    Text(
+                                      "🐸 Projeto simples de Pokédex Pokémon para estudo de HTML",
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 2.sw,
+                                        color: darkThemeIsEnabled == false
+                                            ? RepoColors.blackBackgroundColor
+                                            : Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    height: 20,
-                                  ),
-                                  TextButton(
+                                    SizedBox(height: 20),
+                                    TextButton(
                                       onPressed: () {
                                         launchUrl(Uri.parse(
                                             "https://github.com/alvaro-carlisbino/Pokedex"));
@@ -492,10 +499,11 @@ class _HomePageState extends State<HomePage> {
                                       child: Container(
                                         padding: EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                            color:
-                                                RepoColors.blackBackgroundColor,
-                                            borderRadius:
-                                                BorderRadius.circular(10)),
+                                          color:
+                                              RepoColors.blackBackgroundColor,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
                                         child: Text(
                                           "Veja mais sobre o projeto",
                                           style: GoogleFonts.poppins(
@@ -506,10 +514,14 @@ class _HomePageState extends State<HomePage> {
                                                 : Colors.white,
                                           ),
                                         ),
-                                      ))
-                                ],
-                              )),
-                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       )
                     ]),
               ),
