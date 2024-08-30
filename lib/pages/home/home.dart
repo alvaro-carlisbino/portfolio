@@ -495,8 +495,9 @@ class _HomePageState extends State<HomePage> {
                                       child: Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color:
-                                              RepoColors.blackBackgroundColor,
+                                          color: darkThemeIsEnabled == false
+                                              ? Colors.white
+                                              : RepoColors.blackBackgroundColor,
                                           borderRadius:
                                               BorderRadius.circular(10),
                                         ),
@@ -560,8 +561,9 @@ class _HomePageState extends State<HomePage> {
                                       child: Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color:
-                                              RepoColors.blackBackgroundColor,
+                                          color: darkThemeIsEnabled == false
+                                              ? Colors.white
+                                              : RepoColors.blackBackgroundColor,
                                           borderRadius:
                                               BorderRadius.circular(10),
                                         ),
@@ -625,8 +627,9 @@ class _HomePageState extends State<HomePage> {
                                       child: Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color:
-                                              RepoColors.blackBackgroundColor,
+                                          color: darkThemeIsEnabled == false
+                                              ? Colors.white
+                                              : RepoColors.blackBackgroundColor,
                                           borderRadius:
                                               BorderRadius.circular(10),
                                         ),
