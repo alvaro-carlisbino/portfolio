@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_carousel_widget/flutter_carousel_widget.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:repositoriobryzzen/main.dart';
 import 'package:repositoriobryzzen/utils/colors.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+import 'package:simple_icons/simple_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
@@ -82,8 +82,8 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               Container(
-                margin:
-                    EdgeInsets.only(top: 120, bottom: 50, left: 50, right: 30),
+                margin: const EdgeInsets.only(
+                    top: 120, bottom: 50, left: 50, right: 30),
                 alignment: Alignment.center,
                 width: 512,
                 height: 512,
@@ -150,8 +150,8 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               Container(
-                margin: EdgeInsets.only(top: 200),
-                padding: EdgeInsets.only(bottom: 50),
+                margin: const EdgeInsets.only(top: 200),
+                padding: const EdgeInsets.only(bottom: 50),
                 width: MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(
                     color: darkThemeIsEnabled == false
@@ -169,7 +169,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Container(
-                      margin: EdgeInsets.only(top: 40, left: 40),
+                      margin: const EdgeInsets.only(top: 40, left: 40),
                       alignment: Alignment.centerLeft,
                       child: Text(
                         "Hackathons",
@@ -184,7 +184,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     Container(
-                      margin: EdgeInsets.only(top: 50),
+                      margin: const EdgeInsets.only(top: 50),
                       child: FlutterCarousel(
                         items: [0, 1, 2].map((i) {
                           return Builder(
@@ -204,90 +204,103 @@ class _HomePageState extends State<HomePage> {
                                 "assets/fluxo_deco.png",
                                 "assets/ctfw.HEIC"
                               ];
-                              return Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  margin: EdgeInsets.symmetric(horizontal: 5.0),
-                                  child: Container(
-                                    margin: EdgeInsets.only(top: 20),
-                                    decoration: BoxDecoration(
-                                      color: darkThemeIsEnabled == false
-                                          ? RepoColors.whiteContainerColor
-                                          : RepoColors.blackContainerColor,
-                                      borderRadius: BorderRadius.circular(15),
-                                      image: DecorationImage(
-                                        image: AssetImage(fotos[i]),
-                                        opacity: 0.6,
-                                        fit: BoxFit.cover,
+
+                              return GestureDetector(
+                                onTap: () {
+                                  if (i == 0) {
+                                    launchUrl(Uri.parse(
+                                        "https://pr.agenciasebrae.com.br/inovacao-e-tecnologia/projeto-de-box-para-cultivo-de-morangos-vence-hackathon-inova-agro-na-expoinga/"));
+                                  }
+                                },
+                                child: Container(
+                                    width: MediaQuery.of(context).size.width,
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 5.0),
+                                    child: Container(
+                                      margin: const EdgeInsets.only(top: 20),
+                                      decoration: BoxDecoration(
+                                        color: darkThemeIsEnabled == false
+                                            ? RepoColors.whiteContainerColor
+                                            : RepoColors.blackContainerColor,
+                                        borderRadius: BorderRadius.circular(15),
+                                        image: DecorationImage(
+                                          image: AssetImage(fotos[i]),
+                                          opacity: 0.6,
+                                          fit: BoxFit.cover,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: RepoColors
+                                                .blackBackgroundColor
+                                                .withOpacity(0.1),
+                                            spreadRadius: 5,
+                                            blurRadius: 5,
+                                            offset: const Offset(0, 1),
+                                          ),
+                                        ],
                                       ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: RepoColors.blackBackgroundColor
-                                              .withOpacity(0.1),
-                                          spreadRadius: 5,
-                                          blurRadius: 5,
-                                          offset: const Offset(0, 1),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                              top: 20, bottom: 20),
-                                          child: Text(
-                                            nomes[i],
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 3.sw,
-                                              fontWeight: FontWeight.bold,
-                                              color: darkThemeIsEnabled == false
-                                                  ? RepoColors
-                                                      .blackBackgroundColor
-                                                  : Colors.white,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                top: 20, bottom: 20),
+                                            child: Text(
+                                              nomes[i],
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 3.sw,
+                                                fontWeight: FontWeight.bold,
+                                                color: darkThemeIsEnabled ==
+                                                        false
+                                                    ? RepoColors
+                                                        .blackBackgroundColor
+                                                    : Colors.white,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                              top: 20,
-                                              bottom: 20,
-                                              left: 20,
-                                              right: 20),
-                                          child: Text(
-                                            desc[i],
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 2.sw,
-                                              color: darkThemeIsEnabled == false
-                                                  ? RepoColors
-                                                      .blackBackgroundColor
-                                                  : Colors.white,
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                top: 20,
+                                                bottom: 20,
+                                                left: 20,
+                                                right: 20),
+                                            child: Text(
+                                              desc[i],
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 2.sw,
+                                                color: darkThemeIsEnabled ==
+                                                        false
+                                                    ? RepoColors
+                                                        .blackBackgroundColor
+                                                    : Colors.white,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ));
+                                        ],
+                                      ),
+                                    )),
+                              );
                             },
                           );
                         }).toList(),
                         options: CarouselOptions(
                           height: 500.0,
                           showIndicator: true,
-                          slideIndicator: CircularSlideIndicator(),
+                          slideIndicator: const CircularSlideIndicator(),
                         ),
                       ),
                     )
                   ],
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 50,
               ),
               Container(
-                margin: EdgeInsets.only(top: 200),
-                padding: EdgeInsets.only(bottom: 50),
+                margin: const EdgeInsets.only(top: 200),
+                padding: const EdgeInsets.only(bottom: 50),
                 width: MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(
                     color: darkThemeIsEnabled == false
@@ -305,7 +318,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Container(
-                        margin: EdgeInsets.only(top: 40, left: 40),
+                        margin: const EdgeInsets.only(top: 40, left: 40),
                         alignment: Alignment.centerLeft,
                         child: Text(
                           "Projetos",
@@ -322,7 +335,7 @@ class _HomePageState extends State<HomePage> {
                       LayoutBuilder(
                         builder: (context, constraints) {
                           return Wrap(
-                            alignment: WrapAlignment.spaceEvenly,
+                            alignment: WrapAlignment.spaceBetween,
                             spacing: 20,
                             runSpacing: 20,
                             children: [
@@ -330,8 +343,9 @@ class _HomePageState extends State<HomePage> {
                                 width: constraints.maxWidth < 600
                                     ? constraints.maxWidth * 0.8
                                     : constraints.maxWidth * 0.3,
-                                margin: EdgeInsets.only(top: 50, left: 50),
-                                padding: EdgeInsets.all(20),
+                                margin:
+                                    const EdgeInsets.only(top: 50, left: 50),
+                                padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                     color: RepoColors.blackBackgroundColor,
@@ -351,7 +365,7 @@ class _HomePageState extends State<HomePage> {
                                             : Colors.white,
                                       ),
                                     ),
-                                    SizedBox(height: 20),
+                                    const SizedBox(height: 20),
                                     Text(
                                       "🤖 Chatbot para o Colégio SESI, simplificando a comunicação.",
                                       style: GoogleFonts.roboto(
@@ -361,14 +375,14 @@ class _HomePageState extends State<HomePage> {
                                             : Colors.white,
                                       ),
                                     ),
-                                    SizedBox(height: 20),
+                                    const SizedBox(height: 20),
                                     TextButton(
                                       onPressed: () {
                                         launchUrl(Uri.parse(
                                             "https://github.com/alvaro-carlisbino/Assistente-Virtual-SESI"));
                                       },
                                       child: Container(
-                                        padding: EdgeInsets.all(10),
+                                        padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
                                           color:
                                               RepoColors.blackBackgroundColor,
@@ -394,8 +408,9 @@ class _HomePageState extends State<HomePage> {
                                 width: constraints.maxWidth < 600
                                     ? constraints.maxWidth * 0.8
                                     : constraints.maxWidth * 0.3,
-                                margin: EdgeInsets.only(top: 50, left: 50),
-                                padding: EdgeInsets.all(20),
+                                margin:
+                                    const EdgeInsets.only(top: 50, left: 50),
+                                padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                     color: RepoColors.blackBackgroundColor,
@@ -415,7 +430,7 @@ class _HomePageState extends State<HomePage> {
                                             : Colors.white,
                                       ),
                                     ),
-                                    SizedBox(height: 20),
+                                    const SizedBox(height: 20),
                                     Text(
                                       "💻 RestAPI simples em golang para estudo",
                                       style: GoogleFonts.roboto(
@@ -425,14 +440,14 @@ class _HomePageState extends State<HomePage> {
                                             : Colors.white,
                                       ),
                                     ),
-                                    SizedBox(height: 20),
+                                    const SizedBox(height: 20),
                                     TextButton(
                                       onPressed: () {
                                         launchUrl(Uri.parse(
                                             "https://github.com/alvaro-carlisbino/GolangAPI"));
                                       },
                                       child: Container(
-                                        padding: EdgeInsets.all(10),
+                                        padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
                                           color:
                                               RepoColors.blackBackgroundColor,
@@ -458,9 +473,9 @@ class _HomePageState extends State<HomePage> {
                                 width: constraints.maxWidth < 600
                                     ? constraints.maxWidth * 0.8
                                     : constraints.maxWidth * 0.3,
-                                margin: EdgeInsets.only(
+                                margin: const EdgeInsets.only(
                                     top: 50, left: 50, right: 50),
-                                padding: EdgeInsets.all(20),
+                                padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   border: Border.all(
                                     color: RepoColors.blackBackgroundColor,
@@ -480,7 +495,7 @@ class _HomePageState extends State<HomePage> {
                                             : Colors.white,
                                       ),
                                     ),
-                                    SizedBox(height: 20),
+                                    const SizedBox(height: 20),
                                     Text(
                                       "🐸 Projeto simples de Pokédex Pokémon para estudo de HTML",
                                       style: GoogleFonts.roboto(
@@ -490,14 +505,14 @@ class _HomePageState extends State<HomePage> {
                                             : Colors.white,
                                       ),
                                     ),
-                                    SizedBox(height: 20),
+                                    const SizedBox(height: 20),
                                     TextButton(
                                       onPressed: () {
                                         launchUrl(Uri.parse(
                                             "https://github.com/alvaro-carlisbino/Pokedex"));
                                       },
                                       child: Container(
-                                        padding: EdgeInsets.all(10),
+                                        padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
                                           color:
                                               RepoColors.blackBackgroundColor,
@@ -525,6 +540,80 @@ class _HomePageState extends State<HomePage> {
                       )
                     ]),
               ),
+              const SizedBox(
+                height: 50,
+              ),
+              Container(
+                padding: const EdgeInsets.all(20),
+                color: darkThemeIsEnabled == false
+                    ? RepoColors.whiteContainerColor
+                    : RepoColors.blackContainerColor,
+                child: Column(
+                  children: [
+                    Divider(
+                      color: darkThemeIsEnabled == false
+                          ? RepoColors.blackBackgroundColor.withOpacity(0.2)
+                          : Colors.white.withOpacity(0.2),
+                      thickness: 1,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "© 2024 Alvaro Carlisbino. Todos os direitos reservados.",
+                          style: GoogleFonts.poppins(
+                            fontSize: 1.5.sw,
+                            color: darkThemeIsEnabled == false
+                                ? RepoColors.blackBackgroundColor
+                                : Colors.white,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.linked_camera,
+                                color: darkThemeIsEnabled == false
+                                    ? RepoColors.blackBackgroundColor
+                                    : Colors.white,
+                              ),
+                              onPressed: () {
+                                launchUrl(Uri.parse(
+                                    "https://www.linkedin.com/in/alvaro-carlisbino/"));
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                SimpleIcons.github,
+                                color: darkThemeIsEnabled == false
+                                    ? RepoColors.blackBackgroundColor
+                                    : Colors.white,
+                              ),
+                              onPressed: () {
+                                launchUrl(Uri.parse(
+                                    "https://github.com/alvaro-carlisbino"));
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.email,
+                                color: darkThemeIsEnabled == false
+                                    ? RepoColors.blackBackgroundColor
+                                    : Colors.white,
+                              ),
+                              onPressed: () {
+                                launchUrl(Uri.parse(
+                                    "mailto:alvaromathe123@gmail.com"));
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              )
             ],
           ),
         ),

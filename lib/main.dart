@@ -20,8 +20,8 @@ class MyApp extends StatelessWidget {
       home: const HomePage(),
       debugShowCheckedModeBanner: false,
       translations: Messages(),
-      locale: Locale('pt', 'BR'),
-      fallbackLocale: Locale('pt', 'BR'),
+      locale: const Locale('pt', 'BR'),
+      fallbackLocale: const Locale('pt', 'BR'),
       theme: ThemeData(textTheme: GoogleFonts.montserratTextTheme()),
     );
   }
