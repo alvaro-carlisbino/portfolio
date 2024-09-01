@@ -466,15 +466,26 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 child: Column(
                                   children: [
-                                    Text(
-                                      "Assistente-Virtual-SESI",
-                                      style: GoogleFonts.roboto(
-                                        fontSize: 3.sw,
-                                        fontWeight: FontWeight.bold,
-                                        color: darkThemeIsEnabled == false
-                                            ? RepoColors.blackBackgroundColor
-                                            : Colors.white,
-                                      ),
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "Assistente-Virtual-SESI - ",
+                                          style: GoogleFonts.roboto(
+                                            fontSize: 3.sw,
+                                            fontWeight: FontWeight.bold,
+                                            color: darkThemeIsEnabled == false
+                                                ? RepoColors
+                                                    .blackBackgroundColor
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                        Icon(SimpleIcons.nodedotjs,
+                                            size: 32, color: Colors.green),
+                                      ],
                                     ),
                                     const SizedBox(height: 20),
                                     Text(
@@ -532,15 +543,26 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 child: Column(
                                   children: [
-                                    Text(
-                                      "GolangAPI",
-                                      style: GoogleFonts.roboto(
-                                        fontSize: 3.sw,
-                                        fontWeight: FontWeight.bold,
-                                        color: darkThemeIsEnabled == false
-                                            ? RepoColors.blackBackgroundColor
-                                            : Colors.white,
-                                      ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "GolangAPI - ",
+                                          style: GoogleFonts.roboto(
+                                            fontSize: 3.sw,
+                                            fontWeight: FontWeight.bold,
+                                            color: darkThemeIsEnabled == false
+                                                ? RepoColors
+                                                    .blackBackgroundColor
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                        Icon(SimpleIcons.goland,
+                                            size: 32, color: Colors.black),
+                                      ],
                                     ),
                                     const SizedBox(height: 20),
                                     Text(
@@ -598,15 +620,26 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 child: Column(
                                   children: [
-                                    Text(
-                                      "Pokedex",
-                                      style: GoogleFonts.roboto(
-                                        fontSize: 3.sw,
-                                        fontWeight: FontWeight.bold,
-                                        color: darkThemeIsEnabled == false
-                                            ? RepoColors.blackBackgroundColor
-                                            : Colors.white,
-                                      ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "Pokedex - ",
+                                          style: GoogleFonts.roboto(
+                                            fontSize: 3.sw,
+                                            fontWeight: FontWeight.bold,
+                                            color: darkThemeIsEnabled == false
+                                                ? RepoColors
+                                                    .blackBackgroundColor
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                        Icon(SimpleIcons.html5,
+                                            size: 32, color: Colors.red),
+                                      ],
                                     ),
                                     const SizedBox(height: 20),
                                     Text(
@@ -664,15 +697,26 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 child: Column(
                                   children: [
-                                    Text(
-                                      "Fluxus",
-                                      style: GoogleFonts.roboto(
-                                        fontSize: 3.sw,
-                                        fontWeight: FontWeight.bold,
-                                        color: darkThemeIsEnabled == false
-                                            ? RepoColors.blackBackgroundColor
-                                            : Colors.white,
-                                      ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "Fluxus - ",
+                                          style: GoogleFonts.roboto(
+                                            fontSize: 3.sw,
+                                            fontWeight: FontWeight.bold,
+                                            color: darkThemeIsEnabled == false
+                                                ? RepoColors
+                                                    .blackBackgroundColor
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                        Icon(SimpleIcons.html5,
+                                            size: 32, color: Colors.red),
+                                      ],
                                     ),
                                     const SizedBox(height: 20),
                                     Text(
@@ -689,6 +733,83 @@ class _HomePageState extends State<HomePage> {
                                       onPressed: () {
                                         launchUrl(Uri.parse(
                                             "https://github.com/alvaro-carlisbino/fluxus"));
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: darkThemeIsEnabled == false
+                                              ? Colors.white
+                                              : RepoColors.blackBackgroundColor,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "see_more".tr,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 2.sw,
+                                            color: darkThemeIsEnabled == false
+                                                ? RepoColors
+                                                    .blackBackgroundColor
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                width: constraints.maxWidth < 600
+                                    ? constraints.maxWidth * 0.8
+                                    : constraints.maxWidth * 0.3,
+                                margin: const EdgeInsets.only(
+                                    top: 50, left: 50, right: 50),
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: RepoColors.blackBackgroundColor,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "${"repositorio".tr} - ",
+                                          style: GoogleFonts.roboto(
+                                            fontSize: 3.sw,
+                                            fontWeight: FontWeight.bold,
+                                            color: darkThemeIsEnabled == false
+                                                ? RepoColors
+                                                    .blackBackgroundColor
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                        Icon(SimpleIcons.flutter,
+                                            size: 32, color: Colors.blue),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      "repodesc".tr,
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 2.sw,
+                                        color: darkThemeIsEnabled == false
+                                            ? RepoColors.blackBackgroundColor
+                                            : Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    TextButton(
+                                      onPressed: () {
+                                        launchUrl(Uri.parse(
+                                            "https://github.com/alvaro-carlisbino/portfolio"));
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.all(10),

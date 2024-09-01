@@ -6,53 +6,75 @@ class Messages extends Translations {
         'en_US': {
           'hello': 'Hello World',
           "dev_fullstack": "Full-Stack Developer",
-          "welcome_port": "👋 Welcome to my portfolio! Here, I turn ideas into innovative solutions through code.",
+          "welcome_port":
+              "👋 Welcome to my portfolio! Here, I turn ideas into innovative solutions through code.",
           "inova_agro": "Inova Agro 2024 - 1st Place",
           "deco_cx": "Deco.cx HACKATHON 4th Edition - 2nd Place",
           "ctfw": "Hackathon CTWF 2024 - 1st Place",
           "monobox": "📦 Vegetable cultivation box project",
-          "fluxus": "🏪 E-commerce for Fluxo E-Sports team, with innovative and exclusive design",
-          "cianorte": "🤖 AI for future trends forecasting in the textile sector.",
+          "fluxus":
+              "🏪 E-commerce for Fluxo E-Sports team, with innovative and exclusive design",
+          "cianorte":
+              "🤖 AI for future trends forecasting in the textile sector.",
           "projects": "Projects",
           "sesi": "🤖 Chatbot for SESI School, simplifying communication.",
           "see_more": "See more about the project",
           "golangapi": "💻 Simple RestAPI in Golang for study",
           "pokedex": "🐸 Simple Pokémon Pokédex project for HTML study",
-          "copy": "© 2024 Alvaro Carlisbino. All rights reserved."
+          "copy": "© 2024 Alvaro Carlisbino. All rights reserved.",
+          "repository": "Repository",
+          "repodesc":
+              "👩‍💻 A simple repository made in Flutter to showcase my projects and skills!"
         },
         'es_ES': {
           'hello': 'Hola Mundo',
           "dev_fullstack": "Desarrollador Full-Stack",
-          "welcome_port": "👋 ¡Bienvenido a mi portafolio! Aquí, transformo ideas en soluciones innovadoras a través del código.",
+          "welcome_port":
+              "👋 ¡Bienvenido a mi portafolio! Aquí, transformo ideas en soluciones innovadoras a través del código.",
           "inova_agro": "Inova Agro 2024 - 1er Lugar",
           "deco_cx": "Deco.cx HACKATHON 4ª Edición - 2º Lugar",
           "ctfw": "Hackathon CTWF 2024 - 1er Lugar",
           "monobox": "📦 Proyecto de caja de cultivo de vegetales",
-          "fluxus": "🏪 Comercio electrónico para el equipo de E-Sports Fluxo, con un diseño innovador y exclusivo",
-          "cianorte": "🤖 IA para la predicción de tendencias futuras en el sector textil.",
+          "fluxus":
+              "🏪 Comercio electrónico para el equipo de E-Sports Fluxo, con un diseño innovador y exclusivo",
+          "cianorte":
+              "🤖 IA para la predicción de tendencias futuras en el sector textil.",
           "projects": "Proyectos",
-          "sesi": "🤖 Chatbot para el Colegio SESI, simplificando la comunicación.",
+          "sesi":
+              "🤖 Chatbot para el Colegio SESI, simplificando la comunicación.",
           "see_more": "Ver más sobre el proyecto",
           "golangapi": "💻 RestAPI simple en Golang para estudio",
-          "pokedex": "🐸 Proyecto simple de Pokédex de Pokémon para estudio de HTML",
-          "copy": "© 2024 Alvaro Carlisbino. Todos los derechos reservados."
+          "pokedex":
+              "🐸 Proyecto simple de Pokédex de Pokémon para estudio de HTML",
+          "copy": "© 2024 Alvaro Carlisbino. Todos los derechos reservados.",
+          "repositorio": "Repositorio",
+          "repodesc":
+              "👩‍💻 Un repositorio simple hecho en Flutter para mostrar mis proyectos y capacidades!"
         },
         'pt_BR': {
           'hello': 'Olá Mundo',
           "dev_fullstack": "Desenvolvedor Full-Stack",
-          "welcome_port": "👋 Bem-vindo ao meu portfólio! Aqui, transformo ideias em soluções inovadoras através de código.",
+          "welcome_port":
+              "👋 Bem-vindo ao meu portfólio! Aqui, transformo ideias em soluções inovadoras através de código.",
           "inova_agro": "Inova Agro 2024 - 1º Lugar",
           "deco_cx": "Deco.cx HACKATHON 4° Edição - 2º Lugar",
           "ctfw": "Hackathon CTWF 2024 - 1º Lugar",
           "monobox": "📦 Projeto de box de cultivo para hortaliças",
-          "fluxus": "🏪 E-commerce para o time de E-Sports Fluxo, com design inovador e exclusivo",
-          "cianorte": "🤖 I.A. para previsão de tendências futuras no setor têxtil.",
+          "fluxus":
+              "🏪 E-commerce para o time de E-Sports Fluxo, com design inovador e exclusivo",
+          "cianorte":
+              "🤖 I.A. para previsão de tendências futuras no setor têxtil.",
           "projects": "Projetos",
-          "sesi": "🤖 Chatbot para o Colégio SESI, simplificando a comunicação.",
+          "sesi":
+              "🤖 Chatbot para o Colégio SESI, simplificando a comunicação.",
           "see_more": "Veja mais sobre o projeto",
           "golangapi": "💻 RestAPI simples em golang para estudo",
-          "pokedex": "🐸 Projeto simples de Pokédex Pokémon para estudo de HTML",
-          "copy": "© 2024 Alvaro Carlisbino. Todos os direitos reservados."
+          "pokedex":
+              "🐸 Projeto simples de Pokédex Pokémon para estudo de HTML",
+          "copy": "© 2024 Alvaro Carlisbino. Todos os direitos reservados.",
+          "repositorio": "Repositório",
+          "repodesc":
+              "👩‍💻 Um simples repositório feito em flutter para demonstração de meus projetos e capacidades!"
         },
         'jp_JP': {
           'hello': 'こんにちは世界',
@@ -69,7 +91,9 @@ class Messages extends Translations {
           "see_more": "プロジェクトの詳細を見る",
           "golangapi": "💻 勉強用のシンプルなGolangのRestAPI",
           "pokedex": "🐸 HTML学習用のシンプルなポケモン図鑑プロジェクト",
-          "copy": "© 2024 Alvaro Carlisbino. 無断転載を禁じます。"
+          "copy": "© 2024 Alvaro Carlisbino. 無断転載を禁じます。",
+          "リポジトリ": "リポジトリ",
+          "リポ説明": "👩‍💻 自分のプロジェクトとスキルを紹介するためにFlutterで作成されたシンプルなリポジトリです！"
         }
       };
 }
