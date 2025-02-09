@@ -7,7 +7,7 @@ class Messages extends Translations {
           'hello': 'Hello World',
           "dev_fullstack": "Full-Stack Developer",
           "welcome_port":
-              "👋 Welcome to my portfolio! Here, I turn ideas into innovative solutions through code.",
+              "Welcome to my portfolio! Here, I turn ideas into innovative solutions through code.",
           "inova_agro": "Inova Agro 2024 - 1st Place",
           "deco_cx": "Deco.cx HACKATHON 4th Edition - 2nd Place",
           "ctfw": "Hackathon CTWF 2024 - 1st Place",
@@ -21,10 +21,12 @@ class Messages extends Translations {
           "see_more": "See more about the project",
           "golangapi": "💻 Simple RestAPI in Golang for study",
           "pokedex": "🐸 Simple Pokémon Pokédex project for HTML study",
-          "copy": "© 2024 Alvaro Carlisbino. All rights reserved.",
+          "copy": "© 2025 Alvaro Carlisbino. All rights reserved.",
           "repository": "Repository",
           "repodesc":
-              "👩‍💻 A simple repository made in Flutter to showcase my projects and skills!"
+              "👩‍💻 A simple repository made in Flutter to showcase my projects and skills!",
+          "molda": "Molda.ai",
+          "molda_desc": "💻 A manager to anticipate market trends."
         },
         'es_ES': {
           'hello': 'Hola Mundo',
@@ -46,16 +48,19 @@ class Messages extends Translations {
           "golangapi": "💻 RestAPI simple en Golang para estudio",
           "pokedex":
               "🐸 Proyecto simple de Pokédex de Pokémon para estudio de HTML",
-          "copy": "© 2024 Alvaro Carlisbino. Todos los derechos reservados.",
-          "repositorio": "Repositorio",
+          "copy": "© 2025 Alvaro Carlisbino. Todos los derechos reservados.",
+          "repository": "Repositorio",
           "repodesc":
-              "👩‍💻 Un repositorio simple hecho en Flutter para mostrar mis proyectos y capacidades!"
+              "👩‍💻 Un repositorio simple hecho en Flutter para mostrar mis proyectos y capacidades!",
+          "molda": "Molda.ai",
+          "molda_desc":
+              "💻 Un administrador para anticipar tendencias del mercado."
         },
         'pt_BR': {
           'hello': 'Olá Mundo',
           "dev_fullstack": "Desenvolvedor Full-Stack",
           "welcome_port":
-              "👋 Bem-vindo ao meu portfólio! Aqui, transformo ideias em soluções inovadoras através de código.",
+              "Bem-vindo ao meu portfólio! Aqui, transformo ideias em soluções inovadoras através de código.",
           "inova_agro": "Inova Agro 2024 - 1º Lugar",
           "deco_cx": "Deco.cx HACKATHON 4° Edição - 2º Lugar",
           "ctfw": "Hackathon CTWF 2024 - 1º Lugar",
@@ -71,15 +76,17 @@ class Messages extends Translations {
           "golangapi": "💻 RestAPI simples em golang para estudo",
           "pokedex":
               "🐸 Projeto simples de Pokédex Pokémon para estudo de HTML",
-          "copy": "© 2024 Alvaro Carlisbino. Todos os direitos reservados.",
-          "repositorio": "Repositório",
+          "copy": "© 2025 Alvaro Carlisbino. Todos os direitos reservados.",
+          "repository": "Repositório",
           "repodesc":
-              "👩‍💻 Um simples repositório feito em flutter para demonstração de meus projetos e capacidades!"
+              "👩‍💻 Um simples repositório feito em flutter para demonstração de meus projetos e capacidades!",
+          "molda": "Molda.ai",
+          "molda_desc": "💻 Um administrador para prever tendências do mercado."
         },
         'jp_JP': {
           'hello': 'こんにちは世界',
           "dev_fullstack": "フルスタック開発者",
-          "welcome_port": "👋 私のポートフォリオへようこそ！ここで、アイデアをコードによって革新的なソリューションに変えます。",
+          "welcome_port": "私のポートフォリオへようこそ！ここで、アイデアをコードによって革新的なソリューションに変えます。",
           "inova_agro": "イノバアグロ2024 - 1位",
           "deco_cx": "デコ.cx ハッカソン 第4回 - 2位",
           "ctfw": "ハッカソンCTWF 2024 - 1位",
@@ -91,9 +98,11 @@ class Messages extends Translations {
           "see_more": "プロジェクトの詳細を見る",
           "golangapi": "💻 勉強用のシンプルなGolangのRestAPI",
           "pokedex": "🐸 HTML学習用のシンプルなポケモン図鑑プロジェクト",
-          "copy": "© 2024 Alvaro Carlisbino. 無断転載を禁じます。",
-          "リポジトリ": "リポジトリ",
-          "リポ説明": "👩‍💻 自分のプロジェクトとスキルを紹介するためにFlutterで作成されたシンプルなリポジトリです！"
+          "copy": "© 2025 Alvaro Carlisbino. 無断転載を禁じます。",
+          "repository": "リポジトリ",
+          "repodesc": "👩‍💻 自分のプロジェクトとスキルを紹介するためにFlutterで作成されたシンプルなリポジトリです！",
+          "molda": "Molda.ai",
+          "molda_desc": "💻 マーケットのトレンドを予"
         }
       };
 }

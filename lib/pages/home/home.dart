@@ -46,12 +46,12 @@ class _HomePageState extends State<HomePage> {
                                   : Colors.white,
                             ))),
                     Container(
-                      margin: EdgeInsets.only(right: 30),
+                      margin: const EdgeInsets.only(right: 30),
                       child: Row(
                         children: [
                           Container(
-                            padding: EdgeInsets.all(10),
-                            margin: EdgeInsets.only(right: 20),
+                            padding: const EdgeInsets.all(10),
+                            margin: const EdgeInsets.only(right: 20),
                             decoration: BoxDecoration(
                               color: darkThemeIsEnabled == false
                                   ? Colors.white
@@ -82,7 +82,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
                               color: darkThemeIsEnabled == false
                                   ? Colors.white
@@ -483,7 +483,7 @@ class _HomePageState extends State<HomePage> {
                                                 : Colors.white,
                                           ),
                                         ),
-                                        Icon(SimpleIcons.nodedotjs,
+                                        const Icon(SimpleIcons.nodedotjs,
                                             size: 32, color: Colors.green),
                                       ],
                                     ),
@@ -560,7 +560,7 @@ class _HomePageState extends State<HomePage> {
                                                 : Colors.white,
                                           ),
                                         ),
-                                        Icon(SimpleIcons.goland,
+                                        const Icon(SimpleIcons.goland,
                                             size: 32, color: Colors.black),
                                       ],
                                     ),
@@ -637,7 +637,7 @@ class _HomePageState extends State<HomePage> {
                                                 : Colors.white,
                                           ),
                                         ),
-                                        Icon(SimpleIcons.html5,
+                                        const Icon(SimpleIcons.html5,
                                             size: 32, color: Colors.red),
                                       ],
                                     ),
@@ -685,8 +685,7 @@ class _HomePageState extends State<HomePage> {
                                 width: constraints.maxWidth < 600
                                     ? constraints.maxWidth * 0.8
                                     : constraints.maxWidth * 0.3,
-                                margin: const EdgeInsets.only(
-                                    top: 50, left: 50, right: 50),
+                                margin: const EdgeInsets.only(top: 50),
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   border: Border.all(
@@ -714,7 +713,7 @@ class _HomePageState extends State<HomePage> {
                                                 : Colors.white,
                                           ),
                                         ),
-                                        Icon(SimpleIcons.html5,
+                                        const Icon(SimpleIcons.html5,
                                             size: 32, color: Colors.red),
                                       ],
                                     ),
@@ -781,7 +780,7 @@ class _HomePageState extends State<HomePage> {
                                           CrossAxisAlignment.center,
                                       children: [
                                         Text(
-                                          "${"repositorio".tr} - ",
+                                          "${"repository".tr} - ",
                                           style: GoogleFonts.roboto(
                                             fontSize: 3.sw,
                                             fontWeight: FontWeight.bold,
@@ -791,7 +790,7 @@ class _HomePageState extends State<HomePage> {
                                                 : Colors.white,
                                           ),
                                         ),
-                                        Icon(SimpleIcons.flutter,
+                                        const Icon(SimpleIcons.flutter,
                                             size: 32, color: Colors.blue),
                                       ],
                                     ),
@@ -810,6 +809,83 @@ class _HomePageState extends State<HomePage> {
                                       onPressed: () {
                                         launchUrl(Uri.parse(
                                             "https://github.com/alvaro-carlisbino/portfolio"));
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: darkThemeIsEnabled == false
+                                              ? Colors.white
+                                              : RepoColors.blackBackgroundColor,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          "see_more".tr,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 2.sw,
+                                            color: darkThemeIsEnabled == false
+                                                ? RepoColors
+                                                    .blackBackgroundColor
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                width: constraints.maxWidth < 600
+                                    ? constraints.maxWidth * 0.8
+                                    : constraints.maxWidth * 0.3,
+                                margin: const EdgeInsets.only(
+                                    top: 50),
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: RepoColors.blackBackgroundColor,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "${"molda".tr} - ",
+                                          style: GoogleFonts.roboto(
+                                            fontSize: 3.sw,
+                                            fontWeight: FontWeight.bold,
+                                            color: darkThemeIsEnabled == false
+                                                ? RepoColors
+                                                    .blackBackgroundColor
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                        const Icon(SimpleIcons.flutter,
+                                            size: 32, color: Colors.blue),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      "molda_desc".tr,
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 2.sw,
+                                        color: darkThemeIsEnabled == false
+                                            ? RepoColors.blackBackgroundColor
+                                            : Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    TextButton(
+                                      onPressed: () {
+                                        launchUrl(
+                                            Uri.parse("https://molda.online"));
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.all(10),
@@ -871,7 +947,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         Container(
-                          margin: EdgeInsets.only(left: 100),
+                          margin: const EdgeInsets.only(left: 100),
                           child: Row(
                             children: [
                               TextButton.icon(
