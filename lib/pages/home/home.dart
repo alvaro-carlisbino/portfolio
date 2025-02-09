@@ -685,7 +685,9 @@ class _HomePageState extends State<HomePage> {
                                 width: constraints.maxWidth < 600
                                     ? constraints.maxWidth * 0.8
                                     : constraints.maxWidth * 0.3,
-                                margin: const EdgeInsets.only(top: 50),
+                                margin: EdgeInsets.only(
+                                    top: 50,
+                                    left: constraints.maxWidth < 600 ? 50 : 0),
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   border: Border.all(
@@ -838,8 +840,9 @@ class _HomePageState extends State<HomePage> {
                                 width: constraints.maxWidth < 600
                                     ? constraints.maxWidth * 0.8
                                     : constraints.maxWidth * 0.3,
-                                margin: const EdgeInsets.only(
-                                    top: 50),
+                                margin: EdgeInsets.only(
+                                    top: 50,
+                                    left: constraints.maxWidth < 600 ? 50 : 0),
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
                                   border: Border.all(
@@ -947,71 +950,113 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         Container(
-                          margin: const EdgeInsets.only(left: 100),
-                          child: Row(
-                            children: [
-                              TextButton.icon(
-                                icon: Icon(
-                                  Icons.linked_camera,
-                                  color: darkThemeIsEnabled == false
-                                      ? RepoColors.blackBackgroundColor
-                                      : Colors.white,
-                                ),
-                                label: Text(
-                                  "Meu Linkedin",
-                                  style: TextStyle(
-                                    color: darkThemeIsEnabled == false
-                                        ? RepoColors.blackBackgroundColor
-                                        : Colors.white,
+                          margin: const EdgeInsets.only(left: 20, right: 50),
+                          child: MediaQuery.of(context).size.width > 1000
+                              ? Row(
+                                  children: [
+                                    TextButton.icon(
+                                      icon: Icon(
+                                        Icons.linked_camera,
+                                        color: darkThemeIsEnabled == false
+                                            ? RepoColors.blackBackgroundColor
+                                            : Colors.white,
+                                      ),
+                                      label: Text(
+                                        "Meu Linkedin",
+                                        style: TextStyle(
+                                          color: darkThemeIsEnabled == false
+                                              ? RepoColors.blackBackgroundColor
+                                              : Colors.white,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        launchUrl(Uri.parse(
+                                            "https://www.linkedin.com/in/alvaro-carlisbino/"));
+                                      },
+                                    ),
+                                    TextButton.icon(
+                                      icon: Icon(
+                                        SimpleIcons.github,
+                                        color: darkThemeIsEnabled == false
+                                            ? RepoColors.blackBackgroundColor
+                                            : Colors.white,
+                                      ),
+                                      label: Text(
+                                        "Meu GitHub",
+                                        style: TextStyle(
+                                          color: darkThemeIsEnabled == false
+                                              ? RepoColors.blackBackgroundColor
+                                              : Colors.white,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        launchUrl(Uri.parse(
+                                            "https://github.com/alvaro-carlisbino"));
+                                      },
+                                    ),
+                                    TextButton.icon(
+                                      icon: Icon(
+                                        Icons.email,
+                                        color: darkThemeIsEnabled == false
+                                            ? RepoColors.blackBackgroundColor
+                                            : Colors.white,
+                                      ),
+                                      label: Text(
+                                        "Meu Email",
+                                        style: TextStyle(
+                                          color: darkThemeIsEnabled == false
+                                              ? RepoColors.blackBackgroundColor
+                                              : Colors.white,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        launchUrl(Uri.parse(
+                                            "mailto:alvaromathe123@gmail.com"));
+                                      },
+                                    ),
+                                  ],
+                                )
+                              : Wrap(spacing: 0, children: [
+                                  TextButton.icon(
+                                    icon: Icon(
+                                      SimpleIcons.linkedin,
+                                      color: darkThemeIsEnabled == false
+                                          ? RepoColors.blackBackgroundColor
+                                          : Colors.white,
+                                    ),
+                                    label: Text(""),
+                                    onPressed: () {
+                                      launchUrl(Uri.parse(
+                                          "https://www.linkedin.com/in/alvaro-carlisbino/"));
+                                    },
                                   ),
-                                ),
-                                onPressed: () {
-                                  launchUrl(Uri.parse(
-                                      "https://www.linkedin.com/in/alvaro-carlisbino/"));
-                                },
-                              ),
-                              TextButton.icon(
-                                icon: Icon(
-                                  SimpleIcons.github,
-                                  color: darkThemeIsEnabled == false
-                                      ? RepoColors.blackBackgroundColor
-                                      : Colors.white,
-                                ),
-                                label: Text(
-                                  "Meu GitHub",
-                                  style: TextStyle(
-                                    color: darkThemeIsEnabled == false
-                                        ? RepoColors.blackBackgroundColor
-                                        : Colors.white,
+                                  TextButton.icon(
+                                    icon: Icon(
+                                      SimpleIcons.github,
+                                      color: darkThemeIsEnabled == false
+                                          ? RepoColors.blackBackgroundColor
+                                          : Colors.white,
+                                    ),
+                                    label: Text(""),
+                                    onPressed: () {
+                                      launchUrl(Uri.parse(
+                                          "https://github.com/alvaro-carlisbino"));
+                                    },
                                   ),
-                                ),
-                                onPressed: () {
-                                  launchUrl(Uri.parse(
-                                      "https://github.com/alvaro-carlisbino"));
-                                },
-                              ),
-                              TextButton.icon(
-                                icon: Icon(
-                                  Icons.email,
-                                  color: darkThemeIsEnabled == false
-                                      ? RepoColors.blackBackgroundColor
-                                      : Colors.white,
-                                ),
-                                label: Text(
-                                  "Meu Email",
-                                  style: TextStyle(
-                                    color: darkThemeIsEnabled == false
-                                        ? RepoColors.blackBackgroundColor
-                                        : Colors.white,
+                                  TextButton.icon(
+                                    icon: Icon(
+                                      SimpleIcons.gmail,
+                                      color: darkThemeIsEnabled == false
+                                          ? RepoColors.blackBackgroundColor
+                                          : Colors.white,
+                                    ),
+                                    label: Text(""),
+                                    onPressed: () {
+                                      launchUrl(Uri.parse(
+                                          "mailto:alvaromathe123@gmail.com"));
+                                    },
                                   ),
-                                ),
-                                onPressed: () {
-                                  launchUrl(Uri.parse(
-                                      "mailto:alvaromathe123@gmail.com"));
-                                },
-                              ),
-                            ],
-                          ),
+                                ]),
                         )
                       ],
                     ),
