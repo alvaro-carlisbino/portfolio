@@ -333,10 +333,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildSocialButton(IconData icon, String label, String url) {
-    return ElevatedButton.icon(
+    // Get screen width to adjust text size
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // On small screens, show only icons without labels
+    final bool showLabel = screenWidth > 600;
+
+    return ElevatedButton(
       onPressed: () => launchUrl(Uri.parse(url)),
-      icon: Icon(icon, size: 18),
-      label: Text(label),
       style: ButtonStyle(
         backgroundColor: MaterialStateProperty.all(
           darkThemeIsEnabled
@@ -347,12 +351,31 @@ class _HomePageState extends State<HomePage> {
           darkThemeIsEnabled ? Colors.white : RepoColors.blackBackgroundColor,
         ),
         padding: MaterialStateProperty.all(
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          EdgeInsets.symmetric(
+            horizontal: showLabel ? 16 : 12,
+            vertical: 12,
+          ),
         ),
         shape: MaterialStateProperty.all(
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       ),
+      child: showLabel
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: screenWidth < 800 ? 1.8.sw : 2.sw,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            )
+          : Icon(icon, size: 18), // Only show icon on small screens
     );
   }
 
