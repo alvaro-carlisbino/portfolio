@@ -312,8 +312,10 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 32),
 
           // Social links
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 16,
+            runSpacing: 16,
             children: [
               _buildSocialButton(SimpleIcons.github, "GitHub",
                   "https://github.com/alvaro-carlisbino"),
