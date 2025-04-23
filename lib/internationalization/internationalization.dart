@@ -26,7 +26,9 @@ class Messages extends Translations {
           "repodesc":
               "👩‍💻 A simple repository made in Flutter to showcase my projects and skills!",
           "molda": "Molda.ai",
-          "molda_desc": "💻 A manager to anticipate market trends."
+          "molda_desc": "💻 A manager to anticipate market trends.",
+          "luna": "Luna",
+          "luna_desc": "💻 A website to Luna Bonetti",
         },
         'es_ES': {
           'hello': 'Hola Mundo',
@@ -54,7 +56,9 @@ class Messages extends Translations {
               "👩‍💻 Un repositorio simple hecho en Flutter para mostrar mis proyectos y capacidades!",
           "molda": "Molda.ai",
           "molda_desc":
-              "💻 Un administrador para anticipar tendencias del mercado."
+              "💻 Un administrador para anticipar tendencias del mercado.",
+          "luna": "Luna",
+          "luna_desc": "💻 Un sitio web para la influencer Luna Bonetti",
         },
         'pt_BR': {
           'hello': 'Olá Mundo',
@@ -81,7 +85,10 @@ class Messages extends Translations {
           "repodesc":
               "👩‍💻 Um simples repositório feito em flutter para demonstração de meus projetos e capacidades!",
           "molda": "Molda.ai",
-          "molda_desc": "💻 Um administrador para prever tendências do mercado."
+          "molda_desc": "💻 Um administrador para prever tendências do mercado.",
+          "luna": "Luna",
+          "luna_desc":
+              "💻 Um site para a influencer Luna Bonetti",
         },
         'jp_JP': {
           'hello': 'こんにちは世界',
@@ -102,7 +109,9 @@ class Messages extends Translations {
           "repository": "リポジトリ",
           "repodesc": "👩‍💻 自分のプロジェクトとスキルを紹介するためにFlutterで作成されたシンプルなリポジトリです！",
           "molda": "Molda.ai",
-          "molda_desc": "💻 マーケットのトレンドを予"
+          "molda_desc": "💻 マーケットのトレンドを予",
+          "luna": "ルナ",
+          "luna_desc": "💻 インフルエンサーのルナ・ボネッティのためのウェブサイト",
         }
       };
 }
