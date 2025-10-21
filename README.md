@@ -2,7 +2,7 @@
 
 ## Sobre Mim
 
-Olá! Sou um jovem programador de 17 anos com uma paixão por tecnologia e desenvolvimento de software. Ao longo da minha jornada, tive o privilégio de vencer 3 hackathons, o que me permitiu aprimorar minhas habilidades e me desafiar em ambientes dinâmicos e inovadores.
+Olá! Sou um jovem programador com uma paixão por tecnologia e desenvolvimento de software. Ao longo da minha jornada, tive o privilégio de vencer 3 hackathons, o que me permitiu aprimorar minhas habilidades e me desafiar em ambientes dinâmicos e inovadores.
 
 Estou sempre em busca de aprender mais e de me aprofundar em novas tecnologias e metodologias. Meu objetivo é continuar crescendo como desenvolvedor e contribuir para projetos que façam a diferença.
 
