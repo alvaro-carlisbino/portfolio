@@ -467,9 +467,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             runSpacing: 16,
             children: [
               _buildStatItem(translate(TranslationKeys.yearsExperience).replaceAll('%s', _calculateExperience()), "Anos de Experiência", Icons.work_outline),
-              _buildStatItem("20+", "Projetos Completos", Icons.rocket_launch_outlined),
               _buildStatItem("5+", "Hackathons Vencidos", Icons.emoji_events_outlined),
-              _buildStatItem("1", "Palestra GDG", Icons.record_voice_over_outlined),
             ],
           ).animate()
             .fadeIn(duration: 600.ms, delay: 450.ms)
