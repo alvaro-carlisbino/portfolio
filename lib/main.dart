@@ -1,28 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:repositoriobryzzen/internationalization/internationalization.dart';
+import 'package:provider/provider.dart';
+import 'package:repositoriobryzzen/config/theme/app_theme.dart';
+import 'package:repositoriobryzzen/services/theme_service.dart';
+import 'package:repositoriobryzzen/viewmodels/theme_viewmodel.dart';
+import 'package:repositoriobryzzen/viewmodels/localization_viewmodel.dart';
 import 'package:repositoriobryzzen/pages/home/home.dart';
-import 'package:get/get.dart';
 
 void main() {
   runApp(const MyApp());
 }
-
-bool darkThemeIsEnabled = true;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Alvaro Carlisbino',
-      home: const HomePage(),
-      debugShowCheckedModeBanner: false,
-      translations: Messages(),
-      locale: const Locale('pt', 'BR'),
-      fallbackLocale: const Locale('pt', 'BR'),
-      theme: ThemeData(textTheme: GoogleFonts.montserratTextTheme()),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ThemeViewModel>(
+            create: (_) => ThemeViewModel(ThemeService())),
+        ChangeNotifierProvider<LocalizationViewModel>(
+            create: (_) => LocalizationViewModel()),
+      ],
+      child: Consumer2<ThemeViewModel, LocalizationViewModel>(
+        builder: (context, theme, localization, _) => MaterialApp(
+          title: 'Alvaro Carlisbino',
+          home: const HomePage(),
+          debugShowCheckedModeBanner: false,
+          locale: localization.currentLocale,
+          supportedLocales: localization.supportedLocales,
+          themeMode: theme.currentTheme,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+        ),
+      ),
     );
   }
 }
