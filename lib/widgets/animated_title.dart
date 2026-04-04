@@ -10,12 +10,12 @@ class AnimatedTitle extends StatelessWidget {
   final TextAlign? textAlign;
 
   const AnimatedTitle({
-    Key? key,
+    super.key,
     required this.text,
     this.style,
     this.showHighlight = true,
     this.textAlign,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,14 +28,14 @@ class AnimatedTitle extends StatelessWidget {
               foreground: Paint()
                 ..style = PaintingStyle.stroke
                 ..strokeWidth = 2
-                ..color = AppColors.neonBlue.withOpacity(0.5),
+                ..color = AppColors.neonBlue.withValues(alpha: 0.5),
             ),
             textAlign: textAlign,
           )
               .animate(onPlay: (controller) => controller.repeat())
               .shimmer(
                   duration: 2000.ms,
-                  color: AppColors.neonPurple.withOpacity(0.3))
+                  color: AppColors.neonPurple.withValues(alpha: 0.3))
               .animate()
               .fadeIn(duration: 600.ms),
         Text(

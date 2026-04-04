@@ -12,7 +12,7 @@ class GlassCard extends StatelessWidget {
   final double? height;
 
   const GlassCard({
-    Key? key,
+    super.key,
     required this.child,
     this.padding,
     this.margin,
@@ -20,7 +20,7 @@ class GlassCard extends StatelessWidget {
     this.isDark = true,
     this.width,
     this.height,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -38,12 +38,12 @@ class GlassCard extends StatelessWidget {
               color: isDark ? AppColors.glassDark : AppColors.glassLight,
               borderRadius: BorderRadius.circular(borderRadius),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   spreadRadius: 0,
                 ),

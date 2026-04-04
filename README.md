@@ -1,24 +1,43 @@
-# Bem-vindo ao meu Portfólio!
+# Portfolio - Alvaro Carlisbino
 
-## Sobre Mim
+Portfolio em Flutter Web com foco em narrativa profissional, design renovado e dados atualizados.
 
-Olá! Sou um jovem programador com uma paixão por tecnologia e desenvolvimento de software. Ao longo da minha jornada, tive o privilégio de vencer 3 hackathons, o que me permitiu aprimorar minhas habilidades e me desafiar em ambientes dinâmicos e inovadores.
+## O que foi atualizado
 
-Estou sempre em busca de aprender mais e de me aprofundar em novas tecnologias e metodologias. Meu objetivo é continuar crescendo como desenvolvedor e contribuir para projetos que façam a diferença.
+- Redesign completo com direcao visual hibrida (profissional + moderno)
+- Nova estrutura de narrativa na Home: Hero, Projetos, Skills, Conquistas e CTA final
+- Contrato central de conteudo para facilitar manutencao
+- Integracao com GitHub para carregar repositorios recentes com fallback local
+- Tema claro/escuro e suporte de localizacao mantidos
 
-## O Que Eu Faço
+## Estrutura principal
 
-Aqui você encontrará alguns dos meus projetos mais recentes e interessantes. Eles demonstram minha capacidade de resolver problemas e implementar soluções criativas. Cada projeto é uma oportunidade para explorar novas ideias e expandir meu conhecimento.
+```txt
+lib/
+├── data/
+│   ├── datasources/github_datasource.dart
+│   ├── models/portfolio_content.dart
+│   └── repositories/portfolio_repository.dart
+├── pages/home/home.dart
+├── config/theme/app_theme.dart
+├── utils/colors.dart
+└── utils/text_styles.dart
+```
 
-## Projetos em Destaque
+## Executar localmente
 
-- **MONOBOX**: Box de cultivo para hortaliças
-- **MOLDA.AI**: Inteligência Artificial para previsões de têndencias futuras
+```bash
+fvm flutter pub get
+fvm flutter run -d chrome
+```
 
-## Contato
+## Personalizacao rapida
 
-Se você estiver interessado em colaborar ou se quiser conversar sobre tecnologia, sinta-se à vontade para entrar em contato!
+Edite os dados em `lib/data/models/portfolio_content.dart` para atualizar:
 
-- **LinkedIn**: [Alvaro Carlisbino](https://www.linkedin.com/in/alvaro-matheus-madureira-carlisbino-786534286/)
+- Bio e posicionamento
+- Projetos em destaque
+- Skills
+- Conquistas e timeline
+- Redes e links
 
-Obrigado por visitar meu portfólio. Estou ansioso para o que o futuro reserva e para as novas oportunidades de aprendizado e colaboração!

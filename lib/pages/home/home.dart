@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_carousel_widget/flutter_carousel_widget.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:repositoriobryzzen/l10n/core/constants/translation_keys.dart';
-import 'package:repositoriobryzzen/viewmodels/theme_viewmodel.dart';
-import 'package:repositoriobryzzen/viewmodels/localization_viewmodel.dart';
+import 'package:repositoriobryzzen/data/datasources/devto_datasource.dart';
+import 'package:repositoriobryzzen/data/datasources/github_datasource.dart';
+import 'package:repositoriobryzzen/data/datasources/linkedin_datasource.dart';
+import 'package:repositoriobryzzen/data/models/portfolio_content.dart';
+import 'package:repositoriobryzzen/data/repositories/portfolio_repository.dart';
 import 'package:repositoriobryzzen/utils/colors.dart';
 import 'package:repositoriobryzzen/utils/text_styles.dart';
-import 'package:repositoriobryzzen/widgets/glass_card.dart';
-import 'package:repositoriobryzzen/widgets/animated_title.dart';
-import 'package:responsive_builder/responsive_builder.dart';
-import 'package:simple_icons/simple_icons.dart';
+import 'package:repositoriobryzzen/viewmodels/localization_viewmodel.dart';
+import 'package:repositoriobryzzen/viewmodels/theme_viewmodel.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,1721 +20,1068 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
-  late LocalizationViewModel _localization;
-  late ThemeViewModel _theme;
-  late AnimationController _floatingController;
-  late AnimationController _pulseController;
-  late AnimationController _particleController;
-  
-  int _hoveredProjectIndex = -1;
-  int _hoveredSocialButton = -1;
-
-  bool get isDarkMode => _theme.isDarkMode;
-
-  String translate(String key) => _localization.translate(key);
+class _HomePageState extends State<HomePage> {
+  late final PortfolioRepository _repository;
+  late Future<PortfolioRepositoryData> _portfolioFuture;
 
   @override
   void initState() {
     super.initState();
-    _floatingController = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    )..repeat(reverse: true);
-    
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat();
-    
-    _particleController = AnimationController(
-      duration: const Duration(seconds: 20),
-      vsync: this,
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _floatingController.dispose();
-    _pulseController.dispose();
-    _particleController.dispose();
-    super.dispose();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _localization = Provider.of<LocalizationViewModel>(context);
-    _theme = Provider.of<ThemeViewModel>(context);
+    _repository = PortfolioRepository();
+    _portfolioFuture = _repository.load();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveApp(
-      builder: (context) => Scaffold(
-        backgroundColor: isDarkMode ? AppColors.darkBackground : AppColors.white,
-        body: Stack(
-          children: [
-            _buildAnimatedBackground(),
-            SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 80),
+    final ThemeViewModel themeViewModel = context.watch<ThemeViewModel>();
+    final LocalizationViewModel localizationViewModel =
+        context.watch<LocalizationViewModel>();
+    final bool isDarkMode = themeViewModel.isDarkMode;
+    final Locale locale = localizationViewModel.currentLocale;
 
-                  _buildProfileSection()
-                      .animate()
-                      .fadeIn(duration: 600.ms, delay: 200.ms)
-                      .slideY(begin: 0.2, end: 0),
+    return Scaffold(
+      backgroundColor: isDarkMode ? AppColors.darkBackground : AppColors.white,
+      body: SafeArea(
+        child: FutureBuilder<PortfolioRepositoryData>(
+          future: _portfolioFuture,
+          builder: (
+            BuildContext context,
+            AsyncSnapshot<PortfolioRepositoryData> snapshot,
+          ) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-                  _buildAboutSection()
-                      .animate()
-                      .fadeIn(duration: 600.ms, delay: 250.ms),
+            if (snapshot.hasError || !snapshot.hasData) {
+              return _ErrorView(
+                isDarkMode: isDarkMode,
+                onRetry: () {
+                  setState(() {
+                    _portfolioFuture = _repository.load();
+                  });
+                },
+              );
+            }
 
-                  _buildSkillsSection()
-                      .animate()
-                      .fadeIn(duration: 600.ms, delay: 300.ms),
-
-                  _buildHackathonsSection()
-                      .animate()
-                      .fadeIn(duration: 600.ms, delay: 400.ms),
-
-                  _buildEducationSection()
-                      .animate()
-                      .fadeIn(duration: 600.ms, delay: 450.ms),
-
-                  const SizedBox(height: 50),
-
-                  _buildProjectsSection()
-                      .animate()
-                      .fadeIn(duration: 600.ms, delay: 600.ms),
-
-                  const SizedBox(height: 50),
-
-                  _buildFooter().animate().fadeIn(duration: 600.ms, delay: 800.ms),
-                ],
-              ),
-            ),
-            _buildFloatingControls(),
-          ],
+            final PortfolioRepositoryData data = snapshot.data!;
+            final PortfolioContent content = data.content;
+            return CustomScrollView(
+              slivers: <Widget>[
+                SliverToBoxAdapter(
+                  child: _TopControls(
+                    isDarkMode: isDarkMode,
+                    localizationViewModel: localizationViewModel,
+                    onToggleTheme: themeViewModel.toggleTheme,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _HeroSection(
+                    isDarkMode: isDarkMode,
+                    locale: locale,
+                    content: content,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _ProjectsSection(
+                    isDarkMode: isDarkMode,
+                    locale: locale,
+                    featuredProjects: content.featuredProjects,
+                    githubProjects: data.githubProjects,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _SkillSection(
+                    isDarkMode: isDarkMode,
+                    locale: locale,
+                    groups: content.skillGroups,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _AchievementsSection(
+                    isDarkMode: isDarkMode,
+                    locale: locale,
+                    achievements: content.achievements,
+                    timeline: content.timeline,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _ContentSection(
+                    isDarkMode: isDarkMode,
+                    locale: locale,
+                    devtoArticles: data.devtoArticles,
+                    linkedinProfile: data.linkedinProfile,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: _FooterSection(
+                    isDarkMode: isDarkMode,
+                    locale: locale,
+                    socialLinks: content.socialLinks,
+                    fullName: content.profile.fullName,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
+}
 
-  Widget _buildAnimatedBackground() {
-    return AnimatedBuilder(
-      animation: _particleController,
-      builder: (context, child) {
-        return Stack(
-          children: List.generate(15, (index) {
-            final offset = _particleController.value * 2 * 3.14159;
-            final x = MediaQuery.of(context).size.width * 
-                (0.1 + (index * 0.07) + (0.1 * (index % 3 - 1))) +
-                (50 * (index % 2 == 0 ? 1 : -1) * (offset % 1));
-            final y = MediaQuery.of(context).size.height * 
-                (0.1 + (index * 0.06)) +
-                (30 * (index % 3 - 1) * ((offset + index) % 1));
-            
-            return Positioned(
-              left: x,
-              top: y,
-              child: Container(
-                width: 4 + (index % 3) * 2,
-                height: 4 + (index % 3) * 2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      (isDarkMode ? AppColors.neonBlue : AppColors.neonPurple)
-                          .withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                  ),
+class _TopControls extends StatelessWidget {
+  const _TopControls({
+    required this.isDarkMode,
+    required this.localizationViewModel,
+    required this.onToggleTheme,
+  });
+
+  final bool isDarkMode;
+  final LocalizationViewModel localizationViewModel;
+  final VoidCallback onToggleTheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget>[
+          _ControlButton(
+            icon: isDarkMode ? Icons.light_mode : Icons.dark_mode,
+            onTap: onToggleTheme,
+          ),
+          const SizedBox(width: 12),
+          _ControlButton(
+            icon: Icons.translate,
+            onTap: () {
+              _showLanguageDialog(context, localizationViewModel);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLanguageDialog(
+    BuildContext context,
+    LocalizationViewModel localizationViewModel,
+  ) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Language'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children:
+                localizationViewModel.supportedLocales.map((Locale locale) {
+              return ListTile(
+                title: Text(locale.toString()),
+                onTap: () {
+                  localizationViewModel.setLocale(locale);
+                  Navigator.of(context).pop();
+                },
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HeroSection extends StatelessWidget {
+  const _HeroSection({
+    required this.isDarkMode,
+    required this.locale,
+    required this.content,
+  });
+
+  final bool isDarkMode;
+  final Locale locale;
+  final PortfolioContent content;
+
+  @override
+  Widget build(BuildContext context) {
+    final ProfileContent profile = content.profile;
+    final bool isPt = locale.languageCode == 'pt';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1080),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                padding: const EdgeInsets.all(28),
+                decoration: _panelDecoration(isDarkMode),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      profile.title.resolve(locale),
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.neonBlue,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      profile.fullName,
+                      style: AppTextStyles.h1.copyWith(
+                        color: isDarkMode
+                            ? AppColors.textLight
+                            : AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      profile.tagline.resolve(locale),
+                      style: AppTextStyles.body1.copyWith(
+                        color: isDarkMode
+                            ? AppColors.textLight.withValues(alpha: 0.85)
+                            : AppColors.textDark.withValues(alpha: 0.82),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: profile.focusTags
+                          .map((String tag) => _TagChip(
+                                label: tag,
+                                isDarkMode: isDarkMode,
+                              ))
+                          .toList(),
+                    ),
+                    const SizedBox(height: 24),
+                    Wrap(
+                      spacing: 20,
+                      runSpacing: 10,
+                      children: <Widget>[
+                        _InlineInfo(
+                          icon: Icons.location_on_outlined,
+                          label: profile.location,
+                          isDarkMode: isDarkMode,
+                        ),
+                        _InlineInfo(
+                          icon: Icons.email_outlined,
+                          label: profile.email,
+                          isDarkMode: isDarkMode,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      children: content.socialLinks.map((SocialLink link) {
+                        return _LinkButton(
+                          label: link.label,
+                          icon: link.icon,
+                          url: link.url,
+                          isDarkMode: isDarkMode,
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ),
+              ).animate().fadeIn(duration: 450.ms).slideY(begin: 0.06, end: 0),
+              const SizedBox(height: 24),
+              LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  final bool stacked = constraints.maxWidth < 820;
+                  final List<Widget> children = <Widget>[
+                    ...profile.introParagraphs.map((LocalizedText paragraph) {
+                      return Expanded(
+                        child: _InfoCard(
+                          isDarkMode: isDarkMode,
+                          title: isPt ? 'Visao' : 'Vision',
+                          description: paragraph.resolve(locale),
+                        ),
+                      );
+                    }),
+                    Expanded(
+                      child: _StatPanel(
+                        isDarkMode: isDarkMode,
+                        locale: locale,
+                        stats: content.stats,
+                      ),
+                    ),
+                  ];
+
+                  if (stacked) {
+                    return Column(
+                      children: children
+                          .map((Widget child) => Padding(
+                                padding: const EdgeInsets.only(bottom: 14),
+                                child: child,
+                              ))
+                          .toList(),
+                    );
+                  }
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: children
+                        .map((Widget child) => Padding(
+                              padding: const EdgeInsets.only(right: 12),
+                              child: child,
+                            ))
+                        .toList(),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProjectsSection extends StatelessWidget {
+  const _ProjectsSection({
+    required this.isDarkMode,
+    required this.locale,
+    required this.featuredProjects,
+    required this.githubProjects,
+  });
+
+  final bool isDarkMode;
+  final Locale locale;
+  final List<HighlightProject> featuredProjects;
+  final List<GithubRepositorySummary> githubProjects;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isPt = locale.languageCode == 'pt';
+    return _SectionWrapper(
+      title: isPt ? 'Projetos em destaque' : 'Featured projects',
+      subtitle: isPt
+          ? 'Curadoria com projetos autorais e repositorios atualizados.'
+          : 'A curated mix of flagship products and fresh repositories.',
+      isDarkMode: isDarkMode,
+      child: Column(
+        children: <Widget>[
+          ...featuredProjects.map((HighlightProject project) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _ProjectCard(
+                isDarkMode: isDarkMode,
+                title: project.name,
+                description: project.description.resolve(locale),
+                stack: project.stack,
+                url: project.url,
               ),
             );
           }),
-        );
-      },
-    );
-  }
-
-  Widget _buildFloatingControls() {
-    return Positioned(
-      top: 20,
-      right: 20,
-      child: AnimatedBuilder(
-        animation: _floatingController,
-        builder: (context, child) {
-          return Transform.translate(
-            offset: Offset(0, 5 * _floatingController.value),
-            child: child,
-          );
-        },
-        child: Row(
-          children: [
-            _buildControlButton(
-              icon: Icons.brightness_4,
-              onPressed: () {
-                setState(() {
-                  _theme.toggleTheme();
-                });
-              },
-            ).animate().fadeIn(duration: 600.ms).scale(begin: Offset(0.8, 0.8)),
-            const SizedBox(width: 12),
-            _buildControlButton(
-              icon: Icons.translate,
-              onPressed: () => _showLanguageDialog(),
-            ).animate().fadeIn(duration: 600.ms, delay: 100.ms).scale(begin: Offset(0.8, 0.8)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildControlButton(
-      {required IconData icon, required VoidCallback onPressed}) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.neonBlue.withOpacity(0.2),
-            AppColors.neonPurple.withOpacity(0.2),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDarkMode 
-            ? AppColors.neonBlue.withOpacity(0.4)
-            : AppColors.neonPurple.withOpacity(0.4),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDarkMode 
-              ? AppColors.neonBlue.withOpacity(0.2)
-              : AppColors.neonPurple.withOpacity(0.2),
-            spreadRadius: 2,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
+          if (githubProjects.isNotEmpty) const SizedBox(height: 8),
+          if (githubProjects.isNotEmpty)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                isPt ? 'Atualizados via GitHub' : 'Updated from GitHub',
+                style: AppTextStyles.h3.copyWith(
+                  color: isDarkMode ? AppColors.textLight : AppColors.textDark,
+                ),
+              ),
+            ),
+          const SizedBox(height: 12),
+          ...githubProjects.map((GithubRepositorySummary project) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _ProjectCard(
+                isDarkMode: isDarkMode,
+                title: project.name,
+                description:
+                    '${project.description} · ${project.language} · ★${project.stars}',
+                stack: const <String>['GitHub', 'Open Source'],
+                url: project.url,
+              ),
+            );
+          }),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onPressed,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Icon(
-              icon,
-              color: isDarkMode ? AppColors.neonBlue : AppColors.neonPurple,
-              size: 24,
-            ),
-          ),
-        ),
-      ),
     );
   }
+}
 
-  void _showLanguageDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          translate(TranslationKeys.selectLanguage),
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: isDarkMode ? AppColors.textLight : AppColors.textDark,
-          ),
-        ),
-        backgroundColor: isDarkMode ? AppColors.darkBackground : AppColors.cardLight,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildLanguageOption('English', 'en', 'US'),
-            _buildLanguageOption('Português', 'pt', 'BR'),
-          ],
-        ),
-      ),
-    );
-  }
+class _SkillSection extends StatelessWidget {
+  const _SkillSection({
+    required this.isDarkMode,
+    required this.locale,
+    required this.groups,
+  });
 
-  Widget _buildLanguageOption(
-      String language, String languageCode, String countryCode) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      title: Text(
-        language,
-        style: GoogleFonts.poppins(
-          fontSize: 2.sw,
-          color: isDarkMode ? AppColors.textLight : AppColors.textDark,
-        ),
-      ),
-      onTap: () {
-        final localization = Provider.of<LocalizationViewModel>(context, listen: false);
-        localization.setLocale(Locale(languageCode, countryCode));
-        Navigator.pop(context);
-      },
-      hoverColor: isDarkMode
-          ? AppColors.textLight.withOpacity(0.1)
-          : AppColors.textDark.withOpacity(0.05),
-    );
-  }
+  final bool isDarkMode;
+  final Locale locale;
+  final List<SkillGroup> groups;
 
-  Widget _buildProfileSection() {
-    return Container(
-      margin: const EdgeInsets.only(top: 100, bottom: 60),
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 40),
-      width: MediaQuery.of(context).size.width * 0.9,
-      constraints: const BoxConstraints(maxWidth: 900),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              final pulse = (1 + 0.1 * _pulseController.value);
-              return Transform.scale(
-                scale: pulse,
-                child: Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.neonBlue,
-                        AppColors.neonPurple,
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.neonBlue.withOpacity(0.3 * pulse),
-                        spreadRadius: 2 * pulse,
-                        blurRadius: 20 * pulse,
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: 132,
-                      height: 132,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
-                      ),
-                      child: Center(
-                        child: Text(
-                          "AC",
-                          style: GoogleFonts.poppins(
-                            fontSize: 48,
-                            fontWeight: FontWeight.bold,
-                            foreground: Paint()
-                              ..shader = LinearGradient(
-                                colors: [
-                                  AppColors.neonBlue,
-                                  AppColors.neonPurple,
-                                ],
-                              ).createShader(Rect.fromLTWH(0, 0, 200, 70)),
-                          ),
-                        ),
-                      ),
+  @override
+  Widget build(BuildContext context) {
+    final bool isPt = locale.languageCode == 'pt';
+    return _SectionWrapper(
+      title: isPt ? 'Stack e especialidades' : 'Stack and specialties',
+      subtitle: isPt
+          ? 'Ferramentas e competencias com foco em entrega de produto.'
+          : 'Tools and capabilities focused on product delivery.',
+      isDarkMode: isDarkMode,
+      child: Wrap(
+        spacing: 14,
+        runSpacing: 14,
+        children: groups.map((SkillGroup group) {
+          return SizedBox(
+            width: 320,
+            child: Container(
+              padding: const EdgeInsets.all(18),
+              decoration: _panelDecoration(isDarkMode),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    group.title.resolve(locale),
+                    style: AppTextStyles.h3.copyWith(
+                      color:
+                          isDarkMode ? AppColors.textLight : AppColors.textDark,
                     ),
                   ),
-                ),
-              );
-            },
-          ).animate()
-            .fadeIn(duration: 600.ms)
-            .scale(begin: Offset(0.8, 0.8), end: Offset(1, 1)),
-          
-          const SizedBox(height: 32),
-
-          Text(
-            "Alvaro Carlisbino",
-            style: GoogleFonts.poppins(
-              fontSize: 5.sw,
-              fontWeight: FontWeight.bold,
-              color: isDarkMode ? Colors.white : AppColors.blackBackgroundColor,
-            ),
-          ).animate()
-            .fadeIn(duration: 600.ms, delay: 200.ms)
-            .slideY(begin: 0.2, end: 0),
-
-          const SizedBox(height: 8),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.location_on,
-                size: 18,
-                color: isDarkMode 
-                  ? AppColors.neonBlue.withOpacity(0.7)
-                  : AppColors.neonPurple.withOpacity(0.7),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                "Maringá, Brasil",
-                style: GoogleFonts.poppins(
-                  fontSize: 1.8.sw,
-                  color: isDarkMode
-                      ? Colors.white.withOpacity(0.6)
-                      : AppColors.blackBackgroundColor.withOpacity(0.6),
-                ),
-              ),
-              const SizedBox(width: 20),
-              Icon(
-                Icons.email_outlined,
-                size: 18,
-                color: isDarkMode 
-                  ? AppColors.neonBlue.withOpacity(0.7)
-                  : AppColors.neonPurple.withOpacity(0.7),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                "alvaromathe123@gmail.com",
-                style: GoogleFonts.poppins(
-                  fontSize: 1.8.sw,
-                  color: isDarkMode
-                      ? Colors.white.withOpacity(0.6)
-                      : AppColors.blackBackgroundColor.withOpacity(0.6),
-                ),
-              ),
-            ],
-          ).animate()
-            .fadeIn(duration: 600.ms, delay: 250.ms)
-            .slideY(begin: 0.2, end: 0),
-
-          const SizedBox(height: 16),
-
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.neonBlue.withOpacity(0.2),
-                  AppColors.neonPurple.withOpacity(0.2),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: group.skills
+                        .map((String skill) => _TagChip(
+                              label: skill,
+                              isDarkMode: isDarkMode,
+                            ))
+                        .toList(),
+                  ),
                 ],
               ),
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(
-                color: isDarkMode 
-                  ? AppColors.neonBlue.withOpacity(0.3)
-                  : AppColors.neonPurple.withOpacity(0.3),
-                width: 1,
-              ),
             ),
-            child: Text(
-              translate(TranslationKeys.devRole),
-              style: GoogleFonts.poppins(
-                fontSize: 2.8.sw,
-                fontWeight: FontWeight.w600,
-                color: isDarkMode ? AppColors.neonBlue : AppColors.neonPurple,
-              ),
-            ),
-          ).animate()
-            .fadeIn(duration: 600.ms, delay: 300.ms)
-            .scale(begin: Offset(0.9, 0.9), end: Offset(1, 1)),
-
-          const SizedBox(height: 32),
-
-          Text(
-            translate(TranslationKeys.welcomePortfolio),
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 2.2.sw,
-              height: 1.6,
-              color: isDarkMode
-                  ? Colors.white.withOpacity(0.8)
-                  : AppColors.blackBackgroundColor.withOpacity(0.7),
-            ),
-          ).animate()
-            .fadeIn(duration: 600.ms, delay: 400.ms),
-
-          const SizedBox(height: 24),
-
-          // Stats Row
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 30,
-            runSpacing: 16,
-            children: [
-              _buildStatItem(translate(TranslationKeys.yearsExperience).replaceAll('%s', _calculateExperience()), "Anos de Experiência", Icons.work_outline),
-              _buildStatItem("5+", "Hackathons Vencidos", Icons.emoji_events_outlined),
-            ],
-          ).animate()
-            .fadeIn(duration: 600.ms, delay: 450.ms)
-            .slideY(begin: 0.2, end: 0),
-
-          const SizedBox(height: 40),
-
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 16,
-            runSpacing: 16,
-            children: [
-              _buildSocialButton(SimpleIcons.github, "GitHub",
-                  "https://github.com/alvaro-carlisbino"),
-              _buildSocialButton(SimpleIcons.linkedin, "LinkedIn",
-                  "https://www.linkedin.com/in/alvaro-carlisbino/"),
-              _buildSocialButton(SimpleIcons.gmail, "Email",
-                  "mailto:alvaromathe123@gmail.com"),
-            ],
-          ).animate()
-            .fadeIn(duration: 600.ms, delay: 500.ms)
-            .slideY(begin: 0.2, end: 0),
-        ],
+          );
+        }).toList(),
       ),
     );
   }
+}
 
-  Widget _buildAboutSection() {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
-      padding: const EdgeInsets.all(40),
-      width: MediaQuery.of(context).size.width * 0.9,
-      constraints: const BoxConstraints(maxWidth: 1000),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.neonBlue.withOpacity(0.05),
-            AppColors.neonPurple.withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDarkMode 
-            ? AppColors.neonBlue.withOpacity(0.2)
-            : AppColors.neonPurple.withOpacity(0.2),
-          width: 1.5,
-        ),
-      ),
+class _AchievementsSection extends StatelessWidget {
+  const _AchievementsSection({
+    required this.isDarkMode,
+    required this.locale,
+    required this.achievements,
+    required this.timeline,
+  });
+
+  final bool isDarkMode;
+  final Locale locale;
+  final List<AchievementItem> achievements;
+  final List<TimelineItem> timeline;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isPt = locale.languageCode == 'pt';
+    return _SectionWrapper(
+      title: isPt ? 'Conquistas e trajetoria' : 'Achievements and timeline',
+      subtitle: isPt
+          ? 'Evidencias de evolucao tecnica e impacto em projetos reais.'
+          : 'Evidence of technical growth and impact in real projects.',
+      isDarkMode: isDarkMode,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.neonBlue.withOpacity(0.2),
-                      AppColors.neonPurple.withOpacity(0.2),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.person_outline,
-                  color: isDarkMode ? AppColors.neonBlue : AppColors.neonPurple,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                "Sobre Mim",
-                style: GoogleFonts.poppins(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  foreground: Paint()
-                    ..shader = LinearGradient(
-                      colors: [
-                        AppColors.neonBlue,
-                        AppColors.neonPurple,
-                      ],
-                    ).createShader(Rect.fromLTWH(0, 0, 200, 50)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Text(
-            "Desenvolvedor Mobile apaixonado por criar experiências digitais excepcionais. "
-            "Atualmente cursando Engenharia de Software na UNICV, com mais de 2 anos de experiência "
-            "prática em Flutter e desenvolvimento mobile, transformo ideias em aplicativos funcionais, "
-            "elegantes e escaláveis.",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              height: 1.8,
-              color: isDarkMode
-                  ? Colors.white.withOpacity(0.85)
-                  : AppColors.blackBackgroundColor.withOpacity(0.85),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            "Minha jornada começou em 2023 e desde então venho conquistando prêmios em hackathons, "
-            "palestrando no Google Developer Group (GDG) e desenvolvendo soluções reais para empresas. "
-            "Especializado em Flutter, também possuo experiência sólida em diversas tecnologias "
-            "backend, cloud computing e arquiteturas escaláveis.",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              height: 1.8,
-              color: isDarkMode
-                  ? Colors.white.withOpacity(0.85)
-                  : AppColors.blackBackgroundColor.withOpacity(0.85),
-            ),
-          ),
-          const SizedBox(height: 24),
+        children: <Widget>[
           Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: [
-              _buildTagChip("🎯 Clean Code"),
-              _buildTagChip("📱 Mobile First"),
-              _buildTagChip("🚀 Performance"),
-              _buildTagChip("🎨 UI/UX Design"),
-              _buildTagChip("🧪 TDD"),
-              _buildTagChip("🏆 Hackathon Winner"),
-              _buildTagChip("🎤 Speaker GDG"),
-              _buildTagChip("🎓 Estudante Eng. Software"),
-            ],
+            children: achievements.map((AchievementItem item) {
+              return SizedBox(
+                width: 330,
+                child: _InfoCard(
+                  isDarkMode: isDarkMode,
+                  title: '${item.year} · ${item.title.resolve(locale)}',
+                  description: item.description.resolve(locale),
+                ),
+              );
+            }).toList(),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTagChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDarkMode 
-          ? AppColors.neonBlue.withOpacity(0.15)
-          : AppColors.neonPurple.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDarkMode 
-            ? AppColors.neonBlue.withOpacity(0.3)
-            : AppColors.neonPurple.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.poppins(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: isDarkMode ? AppColors.textLight : AppColors.textDark,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialButton(IconData icon, String label, String url) {
-    final index = label == "GitHub" ? 0 : (label == "LinkedIn" ? 1 : 2);
-    final isHovered = _hoveredSocialButton == index;
-    
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hoveredSocialButton = index),
-      onExit: (_) => setState(() => _hoveredSocialButton = -1),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        transform: Matrix4.identity()
-          ..translate(0.0, isHovered ? -5.0 : 0.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: [
-              AppColors.neonBlue.withOpacity(isHovered ? 0.2 : 0.1),
-              AppColors.neonPurple.withOpacity(isHovered ? 0.2 : 0.1),
-            ],
-          ),
-          border: Border.all(
-            color: isDarkMode 
-              ? AppColors.neonBlue.withOpacity(isHovered ? 0.6 : 0.3)
-              : AppColors.neonPurple.withOpacity(isHovered ? 0.6 : 0.3),
-            width: isHovered ? 2.0 : 1.5,
-          ),
-          boxShadow: isHovered ? [
-            BoxShadow(
-              color: (isDarkMode ? AppColors.neonBlue : AppColors.neonPurple)
-                  .withOpacity(0.4),
-              spreadRadius: 2,
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ] : null,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => launchUrl(Uri.parse(url)),
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          const SizedBox(height: 18),
+          ...timeline.map((TimelineItem item) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(16),
+              decoration: _panelDecoration(isDarkMode),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    icon,
-                    size: isHovered ? 22 : 20,
-                    color: isDarkMode ? AppColors.neonBlue : AppColors.neonPurple,
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    label,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isDarkMode ? AppColors.textLight : AppColors.textDark,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHackathonsSection() {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      padding: const EdgeInsets.symmetric(vertical: 80),
-      child: Column(
-        children: [
-          AnimatedTitle(
-            text: "Hackathons & Conquistas",
-            style: AppTextStyles.h2.copyWith(
-              color: isDarkMode ? AppColors.white : AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            "Múltiplas vitórias em competições de inovação e tecnologia pelo Brasil",
-            style: AppTextStyles.body1.copyWith(
-              color: isDarkMode ? AppColors.white.withOpacity(0.7) : AppColors.textDark.withOpacity(0.7),
-            ),
-          ),
-          const SizedBox(height: 40),
-          _buildHackathonCarousel(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHackathonCarousel() {
-    return FlutterCarousel(
-      items: [0, 1, 2].map((i) {
-        var nomes = [
-          translate(TranslationKeys.inovaAgro),
-          translate(TranslationKeys.decoCx),
-          translate(TranslationKeys.ctfw)
-        ];
-        var desc = [
-          translate(TranslationKeys.monobox),
-          translate(TranslationKeys.fluxus),
-          translate(TranslationKeys.cianorte)
-        ];
-        var fotos = [
-          "assets/inovaagro.jpg",
-          "assets/fluxo_deco.png",
-          "assets/ctfw.HEIC"
-        ];
-
-        return GestureDetector(
-          onTap: () {
-            if (i == 0) {
-              launchUrl(Uri.parse(
-                  "https://pr.agenciasebrae.com.br/inovacao-e-tecnologia/projeto-de-box-para-cultivo-de-morangos-vence-hackathon-inova-agro-na-expoinga/"));
-            }
-          },
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.8,
-            margin: const EdgeInsets.symmetric(horizontal: 20.0),
-            decoration: BoxDecoration(
-              color: isDarkMode
-                  ? AppColors.cardDark
-                  : AppColors.cardLight,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  spreadRadius: 2,
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-              image: DecorationImage(
-                image: AssetImage(fotos[i]),
-                opacity: 0.5,
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.7),
-                  ],
-                ),
-              ),
-              padding: const EdgeInsets.all(30),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    nomes[i],
-                    style: GoogleFonts.poppins(
-                      fontSize: 3.5.sw,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                children: <Widget>[
+                  Container(
+                    width: 80,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    desc[i],
-                    style: GoogleFonts.poppins(
-                      fontSize: 2.sw,
-                      color: Colors.white.withOpacity(0.9),
-                      height: 1.5,
+                    decoration: BoxDecoration(
+                      color: AppColors.neonBlue.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(999),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  if (i == 0)
-                    ElevatedButton(
-                      onPressed: () {
-                        launchUrl(Uri.parse(
-                            "https://pr.agenciasebrae.com.br/inovacao-e-tecnologia/projeto-de-box-para-cultivo-de-morangos-vence-hackathon-inova-agro-na-expoinga/"));
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                    child: Text(
+                      item.yearRange,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.neonBlue,
                       ),
-                      child: Text(
-                        translate(TranslationKeys.seeMore),
-                        style: GoogleFonts.poppins(
-                          fontSize: 1.8.sw,
-                          fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          item.title.resolve(locale),
+                          style: AppTextStyles.body1.copyWith(
+                            color: isDarkMode
+                                ? AppColors.textLight
+                                : AppColors.textDark,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item.organization,
+                          style: AppTextStyles.caption.copyWith(
+                            color: isDarkMode
+                                ? AppColors.textLight.withValues(alpha: 0.7)
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          item.description.resolve(locale),
+                          style: AppTextStyles.body2.copyWith(
+                            color: isDarkMode
+                                ? AppColors.textLight.withValues(alpha: 0.85)
+                                : AppColors.textDark.withValues(alpha: 0.82),
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
                 ],
               ),
-            ),
-          ),
-        );
-      }).toList(),
-      options: CarouselOptions(
-        height: 500.0,
-        showIndicator: true,
-        slideIndicator: const CircularSlideIndicator(),
-        viewportFraction: 0.8,
-      ),
-    );
-  }
-
-  Widget _buildEducationSection() {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
-      constraints: const BoxConstraints(maxWidth: 1000),
-      child: Column(
-        children: [
-          AnimatedTitle(
-            text: "Educação & Conquistas",
-            style: AppTextStyles.h2.copyWith(
-              color: isDarkMode ? AppColors.white : AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            "Meu percurso acadêmico e profissional em desenvolvimento",
-            style: AppTextStyles.body1.copyWith(
-              color: isDarkMode ? AppColors.white.withOpacity(0.7) : AppColors.textDark.withOpacity(0.7),
-            ),
-          ),
-          const SizedBox(height: 40),
-          _buildTimelineItem(
-            year: "2025 - 2029",
-            title: "Bacharelado em Engenharia de Software",
-            institution: "UNICV - Universidade Cidade Verde",
-            description: "Em andamento - Focado em arquitetura de software, desenvolvimento mobile, "
-                "padrões de projeto, metodologias ágeis e boas práticas de engenharia.",
-            icon: Icons.school_outlined,
-            isFirst: true,
-          ),
-          _buildTimelineItem(
-            year: "2025",
-            title: "Palestrante - Google Developer Group",
-            institution: "GDG (Google Developer Group)",
-            description: "Palestrante sobre desenvolvimento mobile e boas práticas em Flutter, "
-                "compartilhando conhecimento com a comunidade de desenvolvedores.",
-            icon: Icons.groups_outlined,
-          ),
-          _buildTimelineItem(
-            year: "2023-2024",
-            title: "Múltiplas Vitórias em Hackathons",
-            institution: "Competições de Inovação",
-            description: "Vencedor de diversos hackathons incluindo Inova Agro (SEBRAE), "
-                "Deco CX e CTFW, desenvolvendo soluções inovadoras para problemas reais.",
-            icon: Icons.emoji_events_outlined,
-          ),
-          _buildTimelineItem(
-            year: "2023",
-            title: "Início na Jornada Mobile",
-            institution: "Flutter & Desenvolvimento Mobile",
-            description: "Início do aprendizado focado em Flutter e Dart, desenvolvimento de "
-                "aplicativos mobile nativos e arquitetura de software.",
-            icon: Icons.rocket_launch_outlined,
-            isLast: true,
-          ),
+            );
+          }),
         ],
       ),
     );
   }
+}
 
-  Widget _buildTimelineItem({
-    required String year,
-    required String title,
-    required String institution,
-    required String description,
-    required IconData icon,
-    bool isFirst = false,
-    bool isLast = false,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          children: [
-            if (!isFirst)
-              Container(
-                width: 2,
-                height: 20,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AppColors.neonBlue.withOpacity(0.3),
-                      AppColors.neonPurple.withOpacity(0.3),
-                    ],
-                  ),
-                ),
-              ),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.neonBlue.withOpacity(0.2),
-                    AppColors.neonPurple.withOpacity(0.2),
-                  ],
-                ),
-                border: Border.all(
-                  color: isDarkMode 
-                    ? AppColors.neonBlue.withOpacity(0.5)
-                    : AppColors.neonPurple.withOpacity(0.5),
-                  width: 2,
-                ),
-              ),
-              child: Icon(
-                icon,
-                color: isDarkMode ? AppColors.neonBlue : AppColors.neonPurple,
-                size: 24,
-              ),
-            ),
-            if (!isLast)
-              Container(
-                width: 2,
-                height: 100,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AppColors.neonBlue.withOpacity(0.3),
-                      AppColors.neonPurple.withOpacity(0.3),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(width: 20),
-        Expanded(
+class _FooterSection extends StatelessWidget {
+  const _FooterSection({
+    required this.isDarkMode,
+    required this.locale,
+    required this.socialLinks,
+    required this.fullName,
+  });
+
+  final bool isDarkMode;
+  final Locale locale;
+  final List<SocialLink> socialLinks;
+  final String fullName;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isPt = locale.languageCode == 'pt';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 10, 24, 30),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1080),
           child: Container(
-            margin: const EdgeInsets.only(bottom: 40),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppColors.neonBlue.withOpacity(0.05),
-                  AppColors.neonPurple.withOpacity(0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isDarkMode 
-                  ? AppColors.neonBlue.withOpacity(0.2)
-                  : AppColors.neonPurple.withOpacity(0.2),
-                width: 1,
-              ),
-            ),
+            padding: const EdgeInsets.all(24),
+            decoration: _panelDecoration(isDarkMode),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 Text(
-                  year,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isDarkMode ? AppColors.neonBlue : AppColors.neonPurple,
+                  isPt
+                      ? 'Vamos construir algo relevante juntos?'
+                      : 'Let us build something meaningful together.',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.h3.copyWith(
+                    color:
+                        isDarkMode ? AppColors.textLight : AppColors.textDark,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? AppColors.textLight : AppColors.textDark,
+                  isPt
+                      ? 'Aberto para novos produtos, desafios e colaboracoes.'
+                      : 'Open to new products, challenges, and collaborations.',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body2.copyWith(
+                    color: isDarkMode
+                        ? AppColors.textLight.withValues(alpha: 0.8)
+                        : AppColors.textDark.withValues(alpha: 0.8),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  institution,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: isDarkMode 
-                      ? AppColors.textLight.withOpacity(0.7)
-                      : AppColors.textDark.withOpacity(0.7),
-                  ),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 12,
+                  children: socialLinks.map((SocialLink link) {
+                    return _LinkButton(
+                      label: link.label,
+                      icon: link.icon,
+                      url: link.url,
+                      isDarkMode: isDarkMode,
+                    );
+                  }).toList(),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 20),
                 Text(
-                  description,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    height: 1.6,
-                    color: isDarkMode 
-                      ? AppColors.textLight.withOpacity(0.8)
-                      : AppColors.textDark.withOpacity(0.8),
+                  '© ${DateTime.now().year} $fullName',
+                  style: AppTextStyles.caption.copyWith(
+                    color: isDarkMode
+                        ? AppColors.textLight.withValues(alpha: 0.6)
+                        : AppColors.textMuted,
                   ),
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContentSection extends StatelessWidget {
+  const _ContentSection({
+    required this.isDarkMode,
+    required this.locale,
+    required this.devtoArticles,
+    required this.linkedinProfile,
+  });
+
+  final bool isDarkMode;
+  final Locale locale;
+  final List<DevtoArticleSummary> devtoArticles;
+  final LinkedinProfileSummary? linkedinProfile;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isPt = locale.languageCode == 'pt';
+    final String linkedinText = linkedinProfile?.headline ??
+        (isPt
+            ? 'Perfil LinkedIn ativo e atualizado.'
+            : 'LinkedIn profile is active and updated.');
+
+    return _SectionWrapper(
+      title: isPt ? 'Conteudo e presenca' : 'Content and presence',
+      subtitle: isPt
+          ? 'Resumo dos canais onde publico e compartilho atualizacoes.'
+          : 'A summary of channels where I publish and share updates.',
+      isDarkMode: isDarkMode,
+      child: Column(
+        children: <Widget>[
+          _InfoCard(
+            isDarkMode: isDarkMode,
+            title: 'LinkedIn',
+            description: linkedinText,
+          ),
+          if (devtoArticles.isNotEmpty) const SizedBox(height: 10),
+          ...devtoArticles.map((DevtoArticleSummary article) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _ProjectCard(
+                isDarkMode: isDarkMode,
+                title: article.title,
+                description: article.publishedAt,
+                stack: const <String>['Dev.to', 'Article'],
+                url: article.url,
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionWrapper extends StatelessWidget {
+  const _SectionWrapper({
+    required this.title,
+    required this.subtitle,
+    required this.isDarkMode,
+    required this.child,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool isDarkMode;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1080),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                title,
+                style: AppTextStyles.h2.copyWith(
+                  color: isDarkMode ? AppColors.textLight : AppColors.textDark,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                subtitle,
+                style: AppTextStyles.body2.copyWith(
+                  color: isDarkMode
+                      ? AppColors.textLight.withValues(alpha: 0.8)
+                      : AppColors.textDark.withValues(alpha: 0.75),
+                ),
+              ),
+              const SizedBox(height: 18),
+              child,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ControlButton extends StatelessWidget {
+  const _ControlButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: BoxDecoration(
+          color: AppColors.neonBlue.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppColors.neonBlue.withValues(alpha: 0.24),
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Icon(icon, size: 20, color: AppColors.neonBlue),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProjectCard extends StatelessWidget {
+  const _ProjectCard({
+    required this.isDarkMode,
+    required this.title,
+    required this.description,
+    required this.stack,
+    required this.url,
+  });
+
+  final bool isDarkMode;
+  final String title;
+  final String description;
+  final List<String> stack;
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: _panelDecoration(isDarkMode),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTextStyles.h3.copyWith(
+                    color:
+                        isDarkMode ? AppColors.textLight : AppColors.textDark,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => _launch(url),
+                icon: const Icon(Icons.open_in_new, size: 16),
+                label: const Text('Open'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: AppTextStyles.body2.copyWith(
+              color: isDarkMode
+                  ? AppColors.textLight.withValues(alpha: 0.85)
+                  : AppColors.textDark.withValues(alpha: 0.82),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: stack
+                .map((String item) =>
+                    _TagChip(label: item, isDarkMode: isDarkMode))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({
+    required this.isDarkMode,
+    required this.title,
+    required this.description,
+  });
+
+  final bool isDarkMode;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _panelDecoration(isDarkMode),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            title,
+            style: AppTextStyles.h3.copyWith(
+              color: isDarkMode ? AppColors.textLight : AppColors.textDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: AppTextStyles.body2.copyWith(
+              color: isDarkMode
+                  ? AppColors.textLight.withValues(alpha: 0.82)
+                  : AppColors.textDark.withValues(alpha: 0.82),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatPanel extends StatelessWidget {
+  const _StatPanel({
+    required this.isDarkMode,
+    required this.locale,
+    required this.stats,
+  });
+
+  final bool isDarkMode;
+  final Locale locale;
+  final List<PortfolioStat> stats;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _panelDecoration(isDarkMode),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: stats.map((PortfolioStat stat) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text(
+                  stat.label.resolve(locale),
+                  style: AppTextStyles.body2.copyWith(
+                    color: isDarkMode
+                        ? AppColors.textLight.withValues(alpha: 0.75)
+                        : AppColors.textDark.withValues(alpha: 0.75),
+                  ),
+                ),
+                Text(
+                  stat.value,
+                  style: AppTextStyles.h3.copyWith(color: AppColors.neonBlue),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _TagChip extends StatelessWidget {
+  const _TagChip({
+    required this.label,
+    required this.isDarkMode,
+  });
+
+  final String label;
+  final bool isDarkMode;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isDarkMode
+            ? AppColors.neonBlue.withValues(alpha: 0.13)
+            : AppColors.neonBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: AppColors.neonBlue.withValues(alpha: 0.24),
+        ),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.caption.copyWith(
+          color: isDarkMode ? AppColors.textLight : AppColors.textDark,
+        ),
+      ),
+    );
+  }
+}
+
+class _LinkButton extends StatelessWidget {
+  const _LinkButton({
+    required this.label,
+    required this.icon,
+    required this.url,
+    required this.isDarkMode,
+  });
+
+  final String label;
+  final IconData icon;
+  final String url;
+  final bool isDarkMode;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: () => _launch(url),
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(color: AppColors.neonBlue.withValues(alpha: 0.35)),
+        foregroundColor: isDarkMode ? AppColors.textLight : AppColors.textDark,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+      icon: Icon(icon, size: 16),
+      label: Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+    );
+  }
+}
+
+class _InlineInfo extends StatelessWidget {
+  const _InlineInfo({
+    required this.icon,
+    required this.label,
+    required this.isDarkMode,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool isDarkMode;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Icon(icon, size: 15, color: AppColors.neonBlue),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(
+            color: isDarkMode
+                ? AppColors.textLight.withValues(alpha: 0.8)
+                : AppColors.textDark.withValues(alpha: 0.8),
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildProjectsSection() {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
-      constraints: const BoxConstraints(maxWidth: 1400),
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({
+    required this.isDarkMode,
+    required this.onRetry,
+  });
+
+  final bool isDarkMode;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
       child: Column(
-        children: [
-          AnimatedTitle(
-            text: translate(TranslationKeys.projects),
-            style: AppTextStyles.h2.copyWith(
-              color: isDarkMode ? AppColors.white : AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 16),
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
           Text(
-            "Uma seleção dos meus melhores trabalhos e contribuições open source",
-            style: AppTextStyles.body1.copyWith(
-              color: isDarkMode ? AppColors.white.withOpacity(0.7) : AppColors.textDark.withOpacity(0.7),
+            'Falha ao carregar portfolio',
+            style: AppTextStyles.h3.copyWith(
+              color: isDarkMode ? AppColors.textLight : AppColors.textDark,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 50),
-          _buildProjectsGrid(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProjectsGrid() {
-    final projects = [
-      {
-        'title': 'Assistente-Virtual-SESI',
-        'icon': SimpleIcons.nodedotjs,
-        'iconColor': Colors.green,
-        'description': translate(TranslationKeys.sesi),
-        'url': 'https://github.com/alvaro-carlisbino/Assistente-Virtual-SESI'
-      },
-      {
-        'title': 'GolangAPI',
-        'icon': SimpleIcons.goland,
-        'iconColor': Colors.black,
-        'description': translate(TranslationKeys.golangApi),
-        'url': 'https://github.com/alvaro-carlisbino/GolangAPI'
-      },
-      {
-        'title': 'Pokedex',
-        'icon': SimpleIcons.html5,
-        'iconColor': Colors.red,
-        'description': translate(TranslationKeys.pokedex),
-        'url': 'https://github.com/alvaro-carlisbino/Pokedex'
-      },
-      {
-        'title': 'Fluxus',
-        'icon': SimpleIcons.html5,
-        'iconColor': Colors.red,
-        'description': translate(TranslationKeys.fluxus),
-        'url': 'https://github.com/alvaro-carlisbino/fluxus'
-      },
-      {
-        'title': translate(TranslationKeys.repository),
-        'icon': SimpleIcons.flutter,
-        'iconColor': Colors.blue,
-        'description': translate(TranslationKeys.repoDesc),
-        'url': 'https://github.com/alvaro-carlisbino/portfolio'
-      },
-      {
-        'title': translate(TranslationKeys.molda),
-        'icon': SimpleIcons.flutter,
-        'iconColor': Colors.blue,
-        'description': translate(TranslationKeys.moldaDesc),
-        'url': 'https://molda.online'
-      },
-      {
-        'title': translate(TranslationKeys.luna),
-        'icon': SimpleIcons.flutter,
-        'iconColor': Colors.blue,
-        'description': translate(TranslationKeys.lunaDesc),
-        'url': 'https://github.com/alvaro-carlisbino/lunaboneti'
-      },
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        int crossAxisCount;
-        if (constraints.maxWidth < 600) {
-          crossAxisCount = 1;
-        } else if (constraints.maxWidth < 1000) {
-          crossAxisCount = 2;
-        } else {
-          crossAxisCount = 3;
-        }
-
-        return Padding(
-          padding: EdgeInsets.zero,
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              childAspectRatio: 1.8,
-            ),
-            itemCount: projects.length,
-            itemBuilder: (context, index) {
-              return _buildProjectCard(
-                title: projects[index]['title'].toString(),
-                icon: projects[index]['icon'] as IconData,
-                iconColor: projects[index]['iconColor'] as Color,
-                description: projects[index]['description'].toString(),
-                url: projects[index]['url'].toString(),
-                index: index,
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildProjectCard({
-    required String title,
-    required IconData icon,
-    required Color iconColor,
-    required String description,
-    required String url,
-    required int index,
-  }) {
-    final isHovered = _hoveredProjectIndex == index;
-    
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hoveredProjectIndex = index),
-      onExit: (_) => setState(() => _hoveredProjectIndex = -1),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        transform: Matrix4.identity()
-          ..translate(0.0, isHovered ? -10.0 : 0.0)
-          ..scale(isHovered ? 1.03 : 1.0),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: isHovered ? [
-              BoxShadow(
-                color: (isDarkMode ? AppColors.neonBlue : AppColors.neonPurple)
-                    .withOpacity(0.3),
-                spreadRadius: 3,
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ] : null,
-          ),
-          child: GlassCard(
-            isDark: isDarkMode,
-            child: InkWell(
-              onTap: () => launchUrl(Uri.parse(url)),
-              borderRadius: BorderRadius.circular(16),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.neonBlue.withOpacity(isHovered ? 0.3 : 0.2),
-                                AppColors.neonPurple.withOpacity(isHovered ? 0.3 : 0.2),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            icon,
-                            size: isHovered ? 24 : 20,
-                            color: isDarkMode ? AppColors.neonBlue : AppColors.neonPurple,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: AppTextStyles.body1.copyWith(
-                              color: isDarkMode ? AppColors.textLight : AppColors.textDark,
-                              fontWeight: FontWeight.w700,
-                              fontSize: isHovered ? 17 : 16,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.body2.copyWith(
-                        color: isDarkMode
-                            ? AppColors.textLight.withOpacity(0.7)
-                            : AppColors.textDark.withOpacity(0.7),
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ).animate()
-        .fadeIn(duration: 400.ms, delay: 100.ms * index)
-        .slideY(begin: 0.1, end: 0),
-    );
-  }
-
-  Widget _buildSkillsSection() {
-    final skills = [
-      {'name': 'Flutter', 'icon': SimpleIcons.flutter, 'proficiency': 1.0},
-      {'name': 'Dart', 'icon': SimpleIcons.dart, 'proficiency': 1.0},
-      {'name': 'Supabase', 'icon': SimpleIcons.supabase, 'proficiency': 1.0},
-      {'name': 'Firebase', 'icon': SimpleIcons.firebase, 'proficiency': 1.0},
-      {'name': 'PostgreSQL', 'icon': SimpleIcons.postgresql, 'proficiency': 1.0},
-      {'name': 'REST API', 'icon': SimpleIcons.postman, 'proficiency': 1.0},
-      {'name': 'Git', 'icon': SimpleIcons.git, 'proficiency': 1.0},
-      {'name': 'CI/CD', 'icon': SimpleIcons.githubactions, 'proficiency': 1.0},
-      {'name': 'Unity Test', 'icon': SimpleIcons.flutter, 'proficiency': 1.0},
-      {'name': 'MVVM', 'icon': SimpleIcons.flutter, 'proficiency': 1.0},
-      {'name': 'Node.js', 'icon': SimpleIcons.nodedotjs, 'proficiency': 1.0},
-      {'name': 'Go', 'icon': SimpleIcons.go, 'proficiency': 1.0},
-      {'name': 'Python', 'icon': SimpleIcons.python, 'proficiency': 1.0},
-      {'name': 'JavaScript', 'icon': SimpleIcons.javascript, 'proficiency': 1.0},
-      {'name': 'TypeScript', 'icon': SimpleIcons.typescript, 'proficiency': 1.0},
-      {'name': 'React', 'icon': SimpleIcons.react, 'proficiency': 1.0},
-      {'name': 'HTML5', 'icon': SimpleIcons.html5, 'proficiency': 1.0},
-      {'name': 'CSS3', 'icon': SimpleIcons.css3, 'proficiency': 1.0},
-      {'name': 'Docker', 'icon': SimpleIcons.docker, 'proficiency': 1.0},
-      {'name': 'AWS', 'icon': SimpleIcons.amazonaws, 'proficiency': 1.0},
-    ];
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 50),
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 30),
-      width: MediaQuery.of(context).size.width * 0.9,
-      constraints: const BoxConstraints(maxWidth: 1200),
-      child: Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.only(bottom: 40),
-            child: Column(
-              children: [
-                AnimatedTitle(
-                  text: translate(TranslationKeys.experienceTitle),
-                  style: AppTextStyles.h2.copyWith(
-                    color: isDarkMode ? AppColors.white : AppColors.textDark,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                GlassCard(
-                  isDark: isDarkMode,
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Mobile Developer",
-                                  style: AppTextStyles.h3.copyWith(
-                                    color: isDarkMode ? AppColors.textLight : AppColors.textDark,
-                                  ),
-                                ),
-                                Text(
-                                  translate(TranslationKeys.periodExperience),
-                                  style: AppTextStyles.body2.copyWith(
-                                    color: isDarkMode 
-                                        ? AppColors.textLight.withOpacity(0.7) 
-                                        : AppColors.textDark.withOpacity(0.7),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Text(
-                              translate(TranslationKeys.yearsExperience).replaceAll('%s', _calculateExperience()),
-                              style: AppTextStyles.h3.copyWith(
-                                color: AppColors.neonBlue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        Container(
-                          height: 40,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.neonBlue,
-                                AppColors.neonPurple,
-                                AppColors.neonPink,
-                              ],
-                            ),
-                          ),
-                          child: Stack(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    flex: 40,
-                                    child: Container(),
-                                  ),
-                                  Expanded(
-                                    flex: 8,
-                                    child: Container(
-                                      color: isDarkMode 
-                                          ? AppColors.cardDark.withOpacity(0.5)
-                                          : AppColors.cardLight.withOpacity(0.5),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Center(
-                                child: Text(
-                                  translate(TranslationKeys.mobileExperience).replaceAll('%s', _calculateExperience()),
-                                  style: AppTextStyles.body2.copyWith(
-                                    color: AppColors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          AnimatedTitle(
-            text: translate(TranslationKeys.skillsTitle),
-            style: AppTextStyles.h2.copyWith(
-              color: isDarkMode ? AppColors.white : AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            translate(TranslationKeys.skillsDescription),
-            style: AppTextStyles.body1.copyWith(
-              color: isDarkMode ? AppColors.white.withOpacity(0.7) : AppColors.textDark.withOpacity(0.7),
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 40),
-          Wrap(
-            spacing: 20,
-            runSpacing: 20,
-            alignment: WrapAlignment.center,
-            children: skills.map((skill) => _buildSkillChip(
-              skill['name'] as String,
-              skill['icon'] as IconData,
-              skills.indexOf(skill),
-            )).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFooter() {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: isDarkMode
-              ? [
-                  AppColors.darkBackground,
-                  AppColors.cardDark,
-                ]
-              : [
-                  AppColors.white,
-                  AppColors.cardLight,
-                ],
-        ),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(30),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.neonBlue.withOpacity(0.05),
-                  AppColors.neonPurple.withOpacity(0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isDarkMode 
-                  ? AppColors.neonBlue.withOpacity(0.2)
-                  : AppColors.neonPurple.withOpacity(0.2),
-                width: 1.5,
-              ),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  "Vamos construir algo incrível juntos?",
-                  style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    foreground: Paint()
-                      ..shader = LinearGradient(
-                        colors: [
-                          AppColors.neonBlue,
-                          AppColors.neonPurple,
-                        ],
-                      ).createShader(Rect.fromLTWH(0, 0, 300, 50)),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Estou sempre aberto a novos projetos e oportunidades",
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    color: isDarkMode
-                        ? Colors.white.withOpacity(0.7)
-                        : AppColors.blackBackgroundColor.withOpacity(0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: 20,
-                  children: [
-                    IconButton(
-                      onPressed: () => launchUrl(Uri.parse("https://github.com/alvaro-carlisbino")),
-                      icon: Icon(SimpleIcons.github, size: 28),
-                      color: isDarkMode ? AppColors.neonBlue : AppColors.neonPurple,
-                      tooltip: "GitHub",
-                    ),
-                    IconButton(
-                      onPressed: () => launchUrl(Uri.parse("https://www.linkedin.com/in/alvaro-carlisbino/")),
-                      icon: Icon(SimpleIcons.linkedin, size: 28),
-                      color: isDarkMode ? AppColors.neonBlue : AppColors.neonPurple,
-                      tooltip: "LinkedIn",
-                    ),
-                    IconButton(
-                      onPressed: () => launchUrl(Uri.parse("mailto:alvaromathe123@gmail.com")),
-                      icon: Icon(SimpleIcons.gmail, size: 28),
-                      color: isDarkMode ? AppColors.neonBlue : AppColors.neonPurple,
-                      tooltip: "Email",
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 40),
-          Divider(
-            color: isDarkMode 
-              ? AppColors.neonBlue.withOpacity(0.2)
-              : AppColors.neonPurple.withOpacity(0.2),
-            thickness: 1,
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 30,
-            runSpacing: 10,
-            children: [
-              Text(
-                "Made with ❤️ using Flutter",
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: isDarkMode
-                      ? Colors.white.withOpacity(0.6)
-                      : AppColors.blackBackgroundColor.withOpacity(0.6),
-                ),
-              ),
-              Text(
-                "•",
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: isDarkMode
-                      ? Colors.white.withOpacity(0.6)
-                      : AppColors.blackBackgroundColor.withOpacity(0.6),
-                ),
-              ),
-              Text(
-                "Hosted on Vercel",
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: isDarkMode
-                      ? Colors.white.withOpacity(0.6)
-                      : AppColors.blackBackgroundColor.withOpacity(0.6),
-                ),
-              ),
-              Text(
-                "•",
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: isDarkMode
-                      ? Colors.white.withOpacity(0.6)
-                      : AppColors.blackBackgroundColor.withOpacity(0.6),
-                ),
-              ),
-              Text(
-                "100% Flutter Web",
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: isDarkMode
-                      ? Colors.white.withOpacity(0.6)
-                      : AppColors.blackBackgroundColor.withOpacity(0.6),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            translate(TranslationKeys.copy),
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: isDarkMode
-                  ? Colors.white.withOpacity(0.5)
-                  : AppColors.blackBackgroundColor.withOpacity(0.5),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _calculateExperience() {
-    final startDate = DateTime(2023, 6);
-    final now = DateTime.now();
-    
-    final years = now.year - startDate.year;
-    final months = now.month - startDate.month;
-    
-    final totalMonths = (years * 12) + months;
-    final experienceYears = totalMonths / 12;
-    
-    final formattedYears = experienceYears.toStringAsFixed(1);
-    return formattedYears;
-  }
-
-  String _calculateMonths() {
-    final startDate = DateTime(2023, 6);
-    final now = DateTime.now();
-    
-    final years = now.year - startDate.year;
-    final months = now.month - startDate.month;
-    
-    return ((years * 12) + months).toString();
-  }
-
-  Widget _buildStatItem(String value, String label, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.neonBlue.withOpacity(0.1),
-            AppColors.neonPurple.withOpacity(0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDarkMode 
-            ? AppColors.neonBlue.withOpacity(0.3)
-            : AppColors.neonPurple.withOpacity(0.3),
-          width: 1.5,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            size: 28,
-            color: isDarkMode ? AppColors.neonBlue : AppColors.neonPurple,
           ),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              foreground: Paint()
-                ..shader = LinearGradient(
-                  colors: [
-                    AppColors.neonBlue,
-                    AppColors.neonPurple,
-                  ],
-                ).createShader(Rect.fromLTWH(0, 0, 100, 30)),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: isDarkMode
-                  ? Colors.white.withOpacity(0.7)
-                  : AppColors.blackBackgroundColor.withOpacity(0.7),
-            ),
-          ),
+          ElevatedButton(
+              onPressed: onRetry, child: const Text('Tentar novamente')),
         ],
       ),
     );
   }
+}
 
-  Widget _buildSkillChip(String name, IconData icon, int index) {
-    return MouseRegion(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.neonBlue.withOpacity(0.1),
-              AppColors.neonPurple.withOpacity(0.1),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: isDarkMode 
-              ? AppColors.neonBlue.withOpacity(0.3)
-              : AppColors.neonPurple.withOpacity(0.3),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: (isDarkMode ? AppColors.neonBlue : AppColors.neonPurple).withOpacity(0.15),
-              spreadRadius: 1,
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 22,
-              color: isDarkMode ? AppColors.neonBlue : AppColors.neonPurple,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              name,
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: isDarkMode ? AppColors.textLight : AppColors.textDark,
-              ),
-            ),
-          ],
-        ),
-      )
-        .animate(onPlay: (controller) => controller.repeat(reverse: true))
-        .shimmer(
-          duration: 2000.ms,
-          delay: (index * 200).ms,
-          color: (isDarkMode ? AppColors.neonBlue : AppColors.neonPurple).withOpacity(0.3),
-        ),
-    ).animate().fadeIn(
-      duration: 400.ms,
-      delay: 50.ms * index,
-    ).scale(begin: Offset(0.9, 0.9), end: Offset(1, 1));
-  }
+BoxDecoration _panelDecoration(bool isDarkMode) {
+  return BoxDecoration(
+    color: isDarkMode ? AppColors.cardDark : Colors.white,
+    borderRadius: BorderRadius.circular(20),
+    border: Border.all(
+      color: isDarkMode
+          ? AppColors.neonBlue.withValues(alpha: 0.2)
+          : AppColors.neonBlue.withValues(alpha: 0.16),
+    ),
+    boxShadow: AppColors.cardShadow,
+  );
+}
+
+Future<void> _launch(String value) async {
+  final Uri uri = Uri.parse(value);
+  await launchUrl(uri, mode: LaunchMode.platformDefault);
 }

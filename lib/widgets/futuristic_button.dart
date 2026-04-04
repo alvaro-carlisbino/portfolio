@@ -10,13 +10,13 @@ class FuturisticButton extends StatefulWidget {
   final bool isSmall;
 
   const FuturisticButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     this.isOutlined = false,
     this.icon,
     this.isSmall = false,
-  }) : super(key: key);
+  });
 
   @override
   State<FuturisticButton> createState() => _FuturisticButtonState();
@@ -54,7 +54,7 @@ class _FuturisticButtonState extends State<FuturisticButton> {
                 boxShadow: isHovered
                     ? [
                         BoxShadow(
-                          color: AppColors.neonBlue.withOpacity(0.3),
+                          color: AppColors.neonBlue.withValues(alpha: 0.3),
                           blurRadius: 12,
                           spreadRadius: 0,
                         ),

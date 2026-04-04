@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:repositoriobryzzen/utils/colors.dart';
 import 'package:repositoriobryzzen/utils/text_styles.dart';
 import 'package:repositoriobryzzen/widgets/glass_card.dart';
-import 'package:simple_icons/simple_icons.dart';
 
 class SkillCard extends StatefulWidget {
   final IconData icon;
@@ -11,12 +10,12 @@ class SkillCard extends StatefulWidget {
   final bool isDark;
 
   const SkillCard({
-    Key? key,
+    super.key,
     required this.icon,
     required this.name,
     required this.proficiency,
     this.isDark = true,
-  }) : super(key: key);
+  });
 
   @override
   State<SkillCard> createState() => _SkillCardState();
@@ -60,8 +59,7 @@ class _SkillCardState extends State<SkillCard>
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        transform: Matrix4.identity()
-          ..translate(_isHovered ? 0.0 : 0.0, _isHovered ? -5.0 : 0.0),
+        transform: Matrix4.translationValues(0.0, _isHovered ? -5.0 : 0.0, 0.0),
         child: GlassCard(
           isDark: widget.isDark,
           padding: const EdgeInsets.all(16),
@@ -90,7 +88,7 @@ class _SkillCardState extends State<SkillCard>
                     value: _progressAnimation.value,
                     backgroundColor:
                         (widget.isDark ? AppColors.white : AppColors.textDark)
-                            .withOpacity(0.1),
+                            .withValues(alpha: 0.1),
                     valueColor: AlwaysStoppedAnimation<Color>(
                       widget.isDark ? AppColors.neonBlue : AppColors.neonPurple,
                     ),
