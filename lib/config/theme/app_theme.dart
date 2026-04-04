@@ -8,19 +8,21 @@ class AppTheme {
         scaffoldBackgroundColor: AppColors.white,
         colorScheme: ColorScheme.fromSeed(
           brightness: Brightness.light,
-          seedColor: AppColors.neonBlue,
+          seedColor: AppColors.brutalRed,
           surface: AppColors.white,
         ),
         cardColor: Colors.white,
+        dividerColor: AppColors.borderStrong,
+        useMaterial3: true,
         textTheme: GoogleFonts.interTextTheme().copyWith(
           headlineLarge: GoogleFonts.sora(
-            fontSize: 44,
-            fontWeight: FontWeight.w700,
+            fontSize: 56,
+            fontWeight: FontWeight.w800,
             color: AppColors.textDark,
           ),
           titleLarge: GoogleFonts.sora(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
+            fontSize: 34,
+            fontWeight: FontWeight.w800,
             color: AppColors.textDark,
           ),
         ),
@@ -31,20 +33,22 @@ class AppTheme {
         scaffoldBackgroundColor: AppColors.darkBackground,
         colorScheme: ColorScheme.fromSeed(
           brightness: Brightness.dark,
-          seedColor: AppColors.neonBlue,
+          seedColor: AppColors.neonYellow,
           surface: AppColors.darkGray,
         ),
         cardColor: AppColors.cardDark,
+        dividerColor: AppColors.lightGray,
+        useMaterial3: true,
         textTheme:
             GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
           headlineLarge: GoogleFonts.sora(
-            fontSize: 44,
-            fontWeight: FontWeight.w700,
+            fontSize: 56,
+            fontWeight: FontWeight.w800,
             color: AppColors.textLight,
           ),
           titleLarge: GoogleFonts.sora(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
+            fontSize: 34,
+            fontWeight: FontWeight.w800,
             color: AppColors.textLight,
           ),
         ),

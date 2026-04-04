@@ -11,6 +11,9 @@ import 'package:repositoriobryzzen/utils/colors.dart';
 import 'package:repositoriobryzzen/utils/text_styles.dart';
 import 'package:repositoriobryzzen/viewmodels/localization_viewmodel.dart';
 import 'package:repositoriobryzzen/viewmodels/theme_viewmodel.dart';
+import 'package:repositoriobryzzen/widgets/neo_background.dart';
+import 'package:repositoriobryzzen/widgets/neo_brutal_card.dart';
+import 'package:repositoriobryzzen/widgets/section_anchor_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
@@ -23,12 +26,73 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late final PortfolioRepository _repository;
   late Future<PortfolioRepositoryData> _portfolioFuture;
+  final ScrollController _scrollController = ScrollController();
+  final List<GlobalKey> _sectionKeys = List<GlobalKey>.generate(
+    6,
+    (_) => GlobalKey(),
+  );
+
+  double _scrollProgress = 0;
+  int _activeSectionIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _repository = PortfolioRepository();
     _portfolioFuture = _repository.load();
+    _scrollController.addListener(_handleScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_handleScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _handleScroll() {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    final double max = _scrollController.position.maxScrollExtent;
+    final double current = _scrollController.offset.clamp(0, max);
+    final double progress = max == 0 ? 0 : (current / max).clamp(0.0, 1.0);
+    int newActive = _activeSectionIndex;
+
+    for (int index = 0; index < _sectionKeys.length; index++) {
+      final BuildContext? sectionContext = _sectionKeys[index].currentContext;
+      if (sectionContext == null) {
+        continue;
+      }
+      final RenderBox box = sectionContext.findRenderObject()! as RenderBox;
+      final Offset position = box.localToGlobal(Offset.zero);
+      if (position.dy <= 200) {
+        newActive = index;
+      }
+    }
+
+    if (progress != _scrollProgress || newActive != _activeSectionIndex) {
+      setState(() {
+        _scrollProgress = progress;
+        _activeSectionIndex = newActive;
+      });
+    }
+  }
+
+  Future<void> _scrollToSection(int index) async {
+    if (index < 0 || index >= _sectionKeys.length) {
+      return;
+    }
+    final BuildContext? sectionContext = _sectionKeys[index].currentContext;
+    if (sectionContext == null) {
+      return;
+    }
+    await Scrollable.ensureVisible(
+      sectionContext,
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeOutCubic,
+      alignment: 0.04,
+    );
   }
 
   @override
@@ -38,125 +102,169 @@ class _HomePageState extends State<HomePage> {
         context.watch<LocalizationViewModel>();
     final bool isDarkMode = themeViewModel.isDarkMode;
     final Locale locale = localizationViewModel.currentLocale;
+    final bool isPt = locale.languageCode == 'pt';
+    final List<String> sectionNames = <String>[
+      isPt ? 'INICIO' : 'START',
+      isPt ? 'PROJETOS' : 'PROJECTS',
+      isPt ? 'STACK' : 'STACK',
+      isPt ? 'CONQUISTAS' : 'WINS',
+      isPt ? 'ATIVIDADE' : 'ACTIVITY',
+      isPt ? 'CONTATO' : 'CONTACT',
+    ];
 
     return Scaffold(
       backgroundColor: isDarkMode ? AppColors.darkBackground : AppColors.white,
-      body: SafeArea(
-        child: FutureBuilder<PortfolioRepositoryData>(
-          future: _portfolioFuture,
-          builder: (
-            BuildContext context,
-            AsyncSnapshot<PortfolioRepositoryData> snapshot,
-          ) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
+      body: Stack(
+        children: <Widget>[
+          NeoBackground(
+            scrollOffset:
+                _scrollController.hasClients ? _scrollController.offset : 0,
+            isDarkMode: isDarkMode,
+          ),
+          SafeArea(
+            child: FutureBuilder<PortfolioRepositoryData>(
+              future: _portfolioFuture,
+              builder: (
+                BuildContext context,
+                AsyncSnapshot<PortfolioRepositoryData> snapshot,
+              ) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-            if (snapshot.hasError || !snapshot.hasData) {
-              return _ErrorView(
-                isDarkMode: isDarkMode,
-                onRetry: () {
-                  setState(() {
-                    _portfolioFuture = _repository.load();
-                  });
-                },
-              );
-            }
+                if (snapshot.hasError || !snapshot.hasData) {
+                  return _ErrorView(
+                    isDarkMode: isDarkMode,
+                    onRetry: () {
+                      setState(() {
+                        _portfolioFuture = _repository.load();
+                      });
+                    },
+                  );
+                }
 
-            final PortfolioRepositoryData data = snapshot.data!;
-            final PortfolioContent content = data.content;
-            return CustomScrollView(
-              slivers: <Widget>[
-                SliverToBoxAdapter(
-                  child: _TopControls(
-                    isDarkMode: isDarkMode,
-                    localizationViewModel: localizationViewModel,
-                    onToggleTheme: themeViewModel.toggleTheme,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _HeroSection(
-                    isDarkMode: isDarkMode,
-                    locale: locale,
-                    content: content,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _ProjectsSection(
-                    isDarkMode: isDarkMode,
-                    locale: locale,
-                    featuredProjects: content.featuredProjects,
-                    githubProjects: data.githubProjects,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _SkillSection(
-                    isDarkMode: isDarkMode,
-                    locale: locale,
-                    groups: content.skillGroups,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _AchievementsSection(
-                    isDarkMode: isDarkMode,
-                    locale: locale,
-                    achievements: content.achievements,
-                    timeline: content.timeline,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _ContentSection(
-                    isDarkMode: isDarkMode,
-                    locale: locale,
-                    devtoArticles: data.devtoArticles,
-                    linkedinProfile: data.linkedinProfile,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _FooterSection(
-                    isDarkMode: isDarkMode,
-                    locale: locale,
-                    socialLinks: content.socialLinks,
-                    fullName: content.profile.fullName,
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+                final PortfolioRepositoryData data = snapshot.data!;
+                final PortfolioContent content = data.content;
+
+                return CustomScrollView(
+                  controller: _scrollController,
+                  slivers: <Widget>[
+                    SliverToBoxAdapter(
+                      child: Column(
+                        children: <Widget>[
+                          _topControlRow(
+                            isDarkMode: isDarkMode,
+                            localizationViewModel: localizationViewModel,
+                            onToggleTheme: themeViewModel.toggleTheme,
+                          ),
+                          SectionAnchorBar(
+                            sections: sectionNames,
+                            activeIndex: _activeSectionIndex,
+                            onTap: _scrollToSection,
+                            isDarkMode: isDarkMode,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      key: _sectionKeys[0],
+                      child: _HeroSection(
+                        isDarkMode: isDarkMode,
+                        locale: locale,
+                        content: content,
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      key: _sectionKeys[1],
+                      child: _ProjectsSection(
+                        isDarkMode: isDarkMode,
+                        locale: locale,
+                        featuredProjects: content.featuredProjects,
+                        githubProjects: data.githubProjects,
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      key: _sectionKeys[2],
+                      child: _SkillSection(
+                        isDarkMode: isDarkMode,
+                        locale: locale,
+                        groups: content.skillGroups,
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      key: _sectionKeys[3],
+                      child: _AchievementsSection(
+                        isDarkMode: isDarkMode,
+                        locale: locale,
+                        achievements: content.achievements,
+                        timeline: content.timeline,
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      key: _sectionKeys[4],
+                      child: _ContentSection(
+                        isDarkMode: isDarkMode,
+                        locale: locale,
+                        devtoArticles: data.devtoArticles,
+                        linkedinProfile: data.linkedinProfile,
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      key: _sectionKeys[5],
+                      child: _FooterSection(
+                        isDarkMode: isDarkMode,
+                        locale: locale,
+                        socialLinks: content.socialLinks,
+                        fullName: content.profile.fullName,
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 42)),
+                  ],
+                );
+              },
+            ),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: LinearProgressIndicator(
+              value: _scrollProgress,
+              minHeight: 6,
+              color: isDarkMode ? AppColors.neonYellow : AppColors.brutalRed,
+              backgroundColor: Colors.transparent,
+            ),
+          ),
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: _FloatingCta(isDarkMode: isDarkMode),
+          ),
+        ],
       ),
     );
   }
-}
 
-class _TopControls extends StatelessWidget {
-  const _TopControls({
-    required this.isDarkMode,
-    required this.localizationViewModel,
-    required this.onToggleTheme,
-  });
-
-  final bool isDarkMode;
-  final LocalizationViewModel localizationViewModel;
-  final VoidCallback onToggleTheme;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _topControlRow({
+    required bool isDarkMode,
+    required LocalizationViewModel localizationViewModel,
+    required VoidCallback onToggleTheme,
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: <Widget>[
           _ControlButton(
             icon: isDarkMode ? Icons.light_mode : Icons.dark_mode,
             onTap: onToggleTheme,
+            isDarkMode: isDarkMode,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           _ControlButton(
             icon: Icons.translate,
-            onTap: () {
-              _showLanguageDialog(context, localizationViewModel);
-            },
+            onTap: () => _showLanguageDialog(context, localizationViewModel),
+            isDarkMode: isDarkMode,
           ),
         ],
       ),
@@ -204,141 +312,95 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ProfileContent profile = content.profile;
     final bool isPt = locale.languageCode == 'pt';
+    final ProfileContent profile = content.profile;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1080),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.all(28),
-                decoration: _panelDecoration(isDarkMode),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return _SectionShell(
+      isDarkMode: isDarkMode,
+      title: isPt ? 'NOVA FASE, NOVO NIVEL' : 'NEW PHASE, NEW LEVEL',
+      subtitle: profile.tagline.resolve(locale),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          NeoBrutalCard(
+            isDarkMode: isDarkMode,
+            backgroundColor:
+                isDarkMode ? AppColors.neonYellow : AppColors.neonBlue,
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    profile.fullName,
+                    style: AppTextStyles.h1.copyWith(
+                      color: AppColors.black,
+                      fontSize: 52,
+                    ),
+                  ),
+                ),
+                const Icon(Icons.bolt, color: AppColors.black, size: 40),
+              ],
+            ),
+          ).animate().fadeIn(duration: 300.ms).slideX(begin: -0.18, end: 0),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: content.socialLinks
+                .map((SocialLink link) => _ActionTag(
+                      label: link.label.toUpperCase(),
+                      onTap: () => _launch(link.url),
+                      isDarkMode: isDarkMode,
+                    ))
+                .toList(),
+          ).animate().fadeIn(duration: 400.ms, delay: 150.ms),
+          const SizedBox(height: 14),
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              if (constraints.maxWidth < 840) {
+                return Column(
                   children: <Widget>[
-                    Text(
-                      profile.title.resolve(locale),
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.neonBlue,
-                        letterSpacing: 0.6,
-                      ),
+                    _IntroPanel(
+                      isDarkMode: isDarkMode,
+                      locale: locale,
+                      profile: profile,
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      profile.fullName,
-                      style: AppTextStyles.h1.copyWith(
-                        color: isDarkMode
-                            ? AppColors.textLight
-                            : AppColors.textDark,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      profile.tagline.resolve(locale),
-                      style: AppTextStyles.body1.copyWith(
-                        color: isDarkMode
-                            ? AppColors.textLight.withValues(alpha: 0.85)
-                            : AppColors.textDark.withValues(alpha: 0.82),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: profile.focusTags
-                          .map((String tag) => _TagChip(
-                                label: tag,
-                                isDarkMode: isDarkMode,
-                              ))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 24),
-                    Wrap(
-                      spacing: 20,
-                      runSpacing: 10,
-                      children: <Widget>[
-                        _InlineInfo(
-                          icon: Icons.location_on_outlined,
-                          label: profile.location,
-                          isDarkMode: isDarkMode,
-                        ),
-                        _InlineInfo(
-                          icon: Icons.email_outlined,
-                          label: profile.email,
-                          isDarkMode: isDarkMode,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: content.socialLinks.map((SocialLink link) {
-                        return _LinkButton(
-                          label: link.label,
-                          icon: link.icon,
-                          url: link.url,
-                          isDarkMode: isDarkMode,
-                        );
-                      }).toList(),
+                    _StatsPanel(
+                      isDarkMode: isDarkMode,
+                      locale: locale,
+                      stats: content.stats,
                     ),
                   ],
-                ),
-              ).animate().fadeIn(duration: 450.ms).slideY(begin: 0.06, end: 0),
-              const SizedBox(height: 24),
-              LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  final bool stacked = constraints.maxWidth < 820;
-                  final List<Widget> children = <Widget>[
-                    ...profile.introParagraphs.map((LocalizedText paragraph) {
-                      return Expanded(
-                        child: _InfoCard(
-                          isDarkMode: isDarkMode,
-                          title: isPt ? 'Visao' : 'Vision',
-                          description: paragraph.resolve(locale),
-                        ),
-                      );
-                    }),
-                    Expanded(
-                      child: _StatPanel(
-                        isDarkMode: isDarkMode,
-                        locale: locale,
-                        stats: content.stats,
-                      ),
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(
+                    flex: 3,
+                    child: _IntroPanel(
+                      isDarkMode: isDarkMode,
+                      locale: locale,
+                      profile: profile,
                     ),
-                  ];
-
-                  if (stacked) {
-                    return Column(
-                      children: children
-                          .map((Widget child) => Padding(
-                                padding: const EdgeInsets.only(bottom: 14),
-                                child: child,
-                              ))
-                          .toList(),
-                    );
-                  }
-
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: children
-                        .map((Widget child) => Padding(
-                              padding: const EdgeInsets.only(right: 12),
-                              child: child,
-                            ))
-                        .toList(),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: _StatsPanel(
+                      isDarkMode: isDarkMode,
+                      locale: locale,
+                      stats: content.stats,
+                    ),
+                  ),
+                ],
+              );
+            },
+          )
+              .animate()
+              .fadeIn(duration: 450.ms, delay: 220.ms)
+              .slideY(begin: 0.08, end: 0),
+        ],
       ),
     );
   }
@@ -360,51 +422,89 @@ class _ProjectsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isPt = locale.languageCode == 'pt';
-    return _SectionWrapper(
-      title: isPt ? 'Projetos em destaque' : 'Featured projects',
-      subtitle: isPt
-          ? 'Curadoria com projetos autorais e repositorios atualizados.'
-          : 'A curated mix of flagship products and fresh repositories.',
+    return _SectionShell(
       isDarkMode: isDarkMode,
+      title: isPt ? 'PROJETOS COM IMPACTO' : 'HIGH-IMPACT PROJECTS',
+      subtitle: isPt
+          ? 'Selecao brutal de projetos e repositorios recentes.'
+          : 'A bold mix of selected projects and fresh repositories.',
+      alternate: true,
       child: Column(
         children: <Widget>[
-          ...featuredProjects.map((HighlightProject project) {
+          ...List<Widget>.generate(featuredProjects.length, (int index) {
+            final HighlightProject project = featuredProjects[index];
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _ProjectCard(
+              child: _ProjectRowCard(
                 isDarkMode: isDarkMode,
                 title: project.name,
                 description: project.description.resolve(locale),
                 stack: project.stack,
                 url: project.url,
-              ),
+                accent:
+                    index.isEven ? AppColors.neonPink : AppColors.neonYellow,
+                reverse: index.isOdd,
+              )
+                  .animate()
+                  .fadeIn(delay: (index * 90).ms, duration: 360.ms)
+                  .slideX(begin: index.isEven ? -0.1 : 0.1, end: 0),
             );
           }),
-          if (githubProjects.isNotEmpty) const SizedBox(height: 8),
+          if (githubProjects.isNotEmpty) const SizedBox(height: 6),
           if (githubProjects.isNotEmpty)
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                isPt ? 'Atualizados via GitHub' : 'Updated from GitHub',
+                isPt ? 'ATIVIDADE GITHUB' : 'GITHUB ACTIVITY',
                 style: AppTextStyles.h3.copyWith(
-                  color: isDarkMode ? AppColors.textLight : AppColors.textDark,
+                  color: isDarkMode ? AppColors.white : AppColors.black,
                 ),
               ),
             ),
-          const SizedBox(height: 12),
-          ...githubProjects.map((GithubRepositorySummary project) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _ProjectCard(
-                isDarkMode: isDarkMode,
-                title: project.name,
-                description:
-                    '${project.description} · ${project.language} · ★${project.stars}',
-                stack: const <String>['GitHub', 'Open Source'],
-                url: project.url,
-              ),
-            );
-          }),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: githubProjects.map((GithubRepositorySummary repo) {
+              return SizedBox(
+                width: 320,
+                child: NeoBrutalCard(
+                  isDarkMode: isDarkMode,
+                  backgroundColor:
+                      isDarkMode ? AppColors.mediumGray : AppColors.lightGray,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        repo.name.toUpperCase(),
+                        style: AppTextStyles.caption.copyWith(
+                          color: isDarkMode
+                              ? AppColors.neonYellow
+                              : AppColors.brutalRed,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        repo.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.body2.copyWith(
+                          color: isDarkMode ? AppColors.white : AppColors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${repo.language} · ★${repo.stars}',
+                        style: AppTextStyles.caption.copyWith(
+                          color: isDarkMode ? AppColors.white : AppColors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ],
       ),
     );
@@ -425,37 +525,41 @@ class _SkillSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isPt = locale.languageCode == 'pt';
-    return _SectionWrapper(
-      title: isPt ? 'Stack e especialidades' : 'Stack and specialties',
-      subtitle: isPt
-          ? 'Ferramentas e competencias com foco em entrega de produto.'
-          : 'Tools and capabilities focused on product delivery.',
+    return _SectionShell(
       isDarkMode: isDarkMode,
+      title: isPt ? 'STACK SEM FILTRO' : 'UNFILTERED STACK',
+      subtitle: isPt
+          ? 'Competencias centrais para construir produtos robustos.'
+          : 'Core capabilities to build robust products.',
       child: Wrap(
-        spacing: 14,
-        runSpacing: 14,
-        children: groups.map((SkillGroup group) {
+        spacing: 10,
+        runSpacing: 10,
+        children: List<Widget>.generate(groups.length, (int index) {
+          final SkillGroup group = groups[index];
           return SizedBox(
-            width: 320,
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              decoration: _panelDecoration(isDarkMode),
+            width: 330,
+            child: NeoBrutalCard(
+              isDarkMode: isDarkMode,
+              backgroundColor: index.isEven
+                  ? (isDarkMode ? AppColors.cardDark : AppColors.white)
+                  : (isDarkMode ? AppColors.mediumGray : AppColors.lightGray),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    group.title.resolve(locale),
-                    style: AppTextStyles.h3.copyWith(
-                      color:
-                          isDarkMode ? AppColors.textLight : AppColors.textDark,
+                    group.title.resolve(locale).toUpperCase(),
+                    style: AppTextStyles.caption.copyWith(
+                      color: isDarkMode
+                          ? AppColors.neonYellow
+                          : AppColors.brutalRed,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: group.skills
-                        .map((String skill) => _TagChip(
+                        .map((String skill) => _SkillPill(
                               label: skill,
                               isDarkMode: isDarkMode,
                             ))
@@ -463,9 +567,10 @@ class _SkillSection extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
+            ).animate().fadeIn(duration: 300.ms, delay: (80 * index).ms).scale(
+                begin: const Offset(0.96, 0.96), end: const Offset(1, 1)),
           );
-        }).toList(),
+        }),
       ),
     );
   }
@@ -487,92 +592,121 @@ class _AchievementsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isPt = locale.languageCode == 'pt';
-    return _SectionWrapper(
-      title: isPt ? 'Conquistas e trajetoria' : 'Achievements and timeline',
-      subtitle: isPt
-          ? 'Evidencias de evolucao tecnica e impacto em projetos reais.'
-          : 'Evidence of technical growth and impact in real projects.',
+    return _SectionShell(
       isDarkMode: isDarkMode,
+      title: isPt ? 'CONQUISTAS REAIS' : 'REAL ACHIEVEMENTS',
+      subtitle: isPt
+          ? 'Resultados em competicao, produto e crescimento tecnico.'
+          : 'Results in competitions, product execution, and technical growth.',
+      alternate: true,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: achievements.map((AchievementItem item) {
+            spacing: 10,
+            runSpacing: 10,
+            children: achievements.map((AchievementItem achievement) {
               return SizedBox(
-                width: 330,
-                child: _InfoCard(
+                width: 325,
+                child: NeoBrutalCard(
                   isDarkMode: isDarkMode,
-                  title: '${item.year} · ${item.title.resolve(locale)}',
-                  description: item.description.resolve(locale),
+                  backgroundColor:
+                      isDarkMode ? AppColors.cardDark : AppColors.white,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        '${achievement.year} · ${achievement.title.resolve(locale)}',
+                        style: AppTextStyles.caption.copyWith(
+                          color: isDarkMode
+                              ? AppColors.neonYellow
+                              : AppColors.brutalRed,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        achievement.description.resolve(locale),
+                        style: AppTextStyles.body2.copyWith(
+                          color: isDarkMode ? AppColors.white : AppColors.black,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }).toList(),
           ),
-          const SizedBox(height: 18),
-          ...timeline.map((TimelineItem item) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(16),
-              decoration: _panelDecoration(isDarkMode),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                    width: 80,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.neonBlue.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      item.yearRange,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.neonBlue,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          item.title.resolve(locale),
-                          style: AppTextStyles.body1.copyWith(
-                            color: isDarkMode
-                                ? AppColors.textLight
-                                : AppColors.textDark,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          item.organization,
-                          style: AppTextStyles.caption.copyWith(
-                            color: isDarkMode
-                                ? AppColors.textLight.withValues(alpha: 0.7)
-                                : AppColors.textMuted,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          item.description.resolve(locale),
-                          style: AppTextStyles.body2.copyWith(
-                            color: isDarkMode
-                                ? AppColors.textLight.withValues(alpha: 0.85)
-                                : AppColors.textDark.withValues(alpha: 0.82),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+          const SizedBox(height: 14),
+          ...List<Widget>.generate(timeline.length, (int index) {
+            final TimelineItem item = timeline[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _TimelineTile(
+                isDarkMode: isDarkMode,
+                yearRange: item.yearRange,
+                title: item.title.resolve(locale),
+                organization: item.organization,
+                description: item.description.resolve(locale),
+              )
+                  .animate()
+                  .fadeIn(duration: 300.ms, delay: (90 * index).ms)
+                  .slideX(begin: index.isEven ? -0.08 : 0.08, end: 0),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContentSection extends StatelessWidget {
+  const _ContentSection({
+    required this.isDarkMode,
+    required this.locale,
+    required this.devtoArticles,
+    required this.linkedinProfile,
+  });
+
+  final bool isDarkMode;
+  final Locale locale;
+  final List<DevtoArticleSummary> devtoArticles;
+  final LinkedinProfileSummary? linkedinProfile;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isPt = locale.languageCode == 'pt';
+    final String linkedinHeadline = linkedinProfile?.headline ??
+        (isPt
+            ? 'Perfil publico atualizado com foco em crescimento continuo.'
+            : 'Public profile updated and focused on continuous growth.');
+
+    return _SectionShell(
+      isDarkMode: isDarkMode,
+      title: isPt ? 'CONTEUDO E PRESENCA' : 'CONTENT AND PRESENCE',
+      subtitle: isPt
+          ? 'Onde compartilho aprendizados e evolucao profissional.'
+          : 'Where I share insights and professional growth.',
+      child: Column(
+        children: <Widget>[
+          _ProjectRowCard(
+            isDarkMode: isDarkMode,
+            title: 'LINKEDIN',
+            description: linkedinHeadline,
+            stack: const <String>['Brand', 'Networking'],
+            url: linkedinProfile?.profileUrl ??
+                'https://www.linkedin.com/in/alvaro-matheus-madureira-carlisbino-786534286/',
+            accent: AppColors.neonBlue,
+          ),
+          if (devtoArticles.isNotEmpty) const SizedBox(height: 10),
+          ...devtoArticles.map((DevtoArticleSummary article) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _ProjectRowCard(
+                isDarkMode: isDarkMode,
+                title: article.title,
+                description: article.publishedAt,
+                stack: const <String>['Dev.to', 'Article'],
+                url: article.url,
+                accent: AppColors.acidGreen,
               ),
             );
           }),
@@ -599,59 +733,103 @@ class _FooterSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isPt = locale.languageCode == 'pt';
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 10, 24, 30),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 18),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1080),
+          child: NeoBrutalCard(
+            isDarkMode: isDarkMode,
+            backgroundColor:
+                isDarkMode ? AppColors.neonYellow : AppColors.brutalRed,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  isPt
+                      ? 'VAMOS CONSTRUIR ALGO GRANDE?'
+                      : 'LET US BUILD SOMETHING BIG?',
+                  style: AppTextStyles.h2.copyWith(
+                    color: AppColors.black,
+                    fontSize: 30,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: socialLinks
+                      .map((SocialLink link) => _ActionTag(
+                            label: link.label.toUpperCase(),
+                            onTap: () => _launch(link.url),
+                            isDarkMode: false,
+                          ))
+                      .toList(),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '© ${DateTime.now().year} $fullName',
+                  style: AppTextStyles.caption.copyWith(color: AppColors.black),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(duration: 400.ms).scale(),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionShell extends StatelessWidget {
+  const _SectionShell({
+    required this.isDarkMode,
+    required this.title,
+    required this.subtitle,
+    required this.child,
+    this.alternate = false,
+  });
+
+  final bool isDarkMode;
+  final String title;
+  final String subtitle;
+  final Widget child;
+  final bool alternate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1080),
           child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: _panelDecoration(isDarkMode),
+            decoration: BoxDecoration(
+              color: alternate
+                  ? (isDarkMode ? AppColors.mediumGray : AppColors.lightGray)
+                  : Colors.transparent,
+              border: Border.all(
+                color: isDarkMode ? AppColors.white : AppColors.black,
+                width: alternate ? 2 : 0,
+              ),
+            ),
+            padding: const EdgeInsets.all(14),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  isPt
-                      ? 'Vamos construir algo relevante juntos?'
-                      : 'Let us build something meaningful together.',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.h3.copyWith(
-                    color:
-                        isDarkMode ? AppColors.textLight : AppColors.textDark,
+                  title,
+                  style: AppTextStyles.h2.copyWith(
+                    color: isDarkMode ? AppColors.white : AppColors.black,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
-                  isPt
-                      ? 'Aberto para novos produtos, desafios e colaboracoes.'
-                      : 'Open to new products, challenges, and collaborations.',
-                  textAlign: TextAlign.center,
+                  subtitle,
                   style: AppTextStyles.body2.copyWith(
-                    color: isDarkMode
-                        ? AppColors.textLight.withValues(alpha: 0.8)
-                        : AppColors.textDark.withValues(alpha: 0.8),
+                    color: isDarkMode ? AppColors.lightGray : AppColors.black,
                   ),
                 ),
-                const SizedBox(height: 20),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 12,
-                  children: socialLinks.map((SocialLink link) {
-                    return _LinkButton(
-                      label: link.label,
-                      icon: link.icon,
-                      url: link.url,
-                      isDarkMode: isDarkMode,
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  '© ${DateTime.now().year} $fullName',
-                  style: AppTextStyles.caption.copyWith(
-                    color: isDarkMode
-                        ? AppColors.textLight.withValues(alpha: 0.6)
-                        : AppColors.textMuted,
-                  ),
-                ),
+                const SizedBox(height: 12),
+                child,
               ],
             ),
           ),
@@ -661,199 +839,49 @@ class _FooterSection extends StatelessWidget {
   }
 }
 
-class _ContentSection extends StatelessWidget {
-  const _ContentSection({
+class _IntroPanel extends StatelessWidget {
+  const _IntroPanel({
     required this.isDarkMode,
     required this.locale,
-    required this.devtoArticles,
-    required this.linkedinProfile,
+    required this.profile,
   });
 
   final bool isDarkMode;
   final Locale locale;
-  final List<DevtoArticleSummary> devtoArticles;
-  final LinkedinProfileSummary? linkedinProfile;
+  final ProfileContent profile;
 
   @override
   Widget build(BuildContext context) {
-    final bool isPt = locale.languageCode == 'pt';
-    final String linkedinText = linkedinProfile?.headline ??
-        (isPt
-            ? 'Perfil LinkedIn ativo e atualizado.'
-            : 'LinkedIn profile is active and updated.');
-
-    return _SectionWrapper(
-      title: isPt ? 'Conteudo e presenca' : 'Content and presence',
-      subtitle: isPt
-          ? 'Resumo dos canais onde publico e compartilho atualizacoes.'
-          : 'A summary of channels where I publish and share updates.',
+    return NeoBrutalCard(
       isDarkMode: isDarkMode,
-      child: Column(
-        children: <Widget>[
-          _InfoCard(
-            isDarkMode: isDarkMode,
-            title: 'LinkedIn',
-            description: linkedinText,
-          ),
-          if (devtoArticles.isNotEmpty) const SizedBox(height: 10),
-          ...devtoArticles.map((DevtoArticleSummary article) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _ProjectCard(
-                isDarkMode: isDarkMode,
-                title: article.title,
-                description: article.publishedAt,
-                stack: const <String>['Dev.to', 'Article'],
-                url: article.url,
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionWrapper extends StatelessWidget {
-  const _SectionWrapper({
-    required this.title,
-    required this.subtitle,
-    required this.isDarkMode,
-    required this.child,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool isDarkMode;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1080),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                title,
-                style: AppTextStyles.h2.copyWith(
-                  color: isDarkMode ? AppColors.textLight : AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                subtitle,
-                style: AppTextStyles.body2.copyWith(
-                  color: isDarkMode
-                      ? AppColors.textLight.withValues(alpha: 0.8)
-                      : AppColors.textDark.withValues(alpha: 0.75),
-                ),
-              ),
-              const SizedBox(height: 18),
-              child,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ControlButton extends StatelessWidget {
-  const _ControlButton({
-    required this.icon,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: Ink(
-        decoration: BoxDecoration(
-          color: AppColors.neonBlue.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: AppColors.neonBlue.withValues(alpha: 0.24),
-          ),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Icon(icon, size: 20, color: AppColors.neonBlue),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ProjectCard extends StatelessWidget {
-  const _ProjectCard({
-    required this.isDarkMode,
-    required this.title,
-    required this.description,
-    required this.stack,
-    required this.url,
-  });
-
-  final bool isDarkMode;
-  final String title;
-  final String description;
-  final List<String> stack;
-  final String url;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: _panelDecoration(isDarkMode),
+      backgroundColor: isDarkMode ? AppColors.cardDark : AppColors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTextStyles.h3.copyWith(
-                    color:
-                        isDarkMode ? AppColors.textLight : AppColors.textDark,
-                  ),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => _launch(url),
-                icon: const Icon(Icons.open_in_new, size: 16),
-                label: const Text('Open'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
           Text(
-            description,
-            style: AppTextStyles.body2.copyWith(
-              color: isDarkMode
-                  ? AppColors.textLight.withValues(alpha: 0.85)
-                  : AppColors.textDark.withValues(alpha: 0.82),
+            profile.title.resolve(locale).toUpperCase(),
+            style: AppTextStyles.caption.copyWith(
+              color: isDarkMode ? AppColors.neonYellow : AppColors.brutalRed,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
+          ...profile.introParagraphs.map((LocalizedText paragraph) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                paragraph.resolve(locale),
+                style: AppTextStyles.body2.copyWith(
+                  color: isDarkMode ? AppColors.white : AppColors.black,
+                ),
+              ),
+            );
+          }),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: stack
-                .map((String item) =>
-                    _TagChip(label: item, isDarkMode: isDarkMode))
+            children: profile.focusTags
+                .map((String tag) => _SkillPill(
+                    label: tag.toUpperCase(), isDarkMode: isDarkMode))
                 .toList(),
           ),
         ],
@@ -862,48 +890,8 @@ class _ProjectCard extends StatelessWidget {
   }
 }
 
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({
-    required this.isDarkMode,
-    required this.title,
-    required this.description,
-  });
-
-  final bool isDarkMode;
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: _panelDecoration(isDarkMode),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            title,
-            style: AppTextStyles.h3.copyWith(
-              color: isDarkMode ? AppColors.textLight : AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: AppTextStyles.body2.copyWith(
-              color: isDarkMode
-                  ? AppColors.textLight.withValues(alpha: 0.82)
-                  : AppColors.textDark.withValues(alpha: 0.82),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatPanel extends StatelessWidget {
-  const _StatPanel({
+class _StatsPanel extends StatelessWidget {
+  const _StatsPanel({
     required this.isDarkMode,
     required this.locale,
     required this.stats,
@@ -915,28 +903,32 @@ class _StatPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: _panelDecoration(isDarkMode),
+    return NeoBrutalCard(
+      isDarkMode: isDarkMode,
+      backgroundColor: isDarkMode ? AppColors.mediumGray : AppColors.lightGray,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: stats.map((PortfolioStat stat) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text(
-                  stat.label.resolve(locale),
-                  style: AppTextStyles.body2.copyWith(
-                    color: isDarkMode
-                        ? AppColors.textLight.withValues(alpha: 0.75)
-                        : AppColors.textDark.withValues(alpha: 0.75),
+                Expanded(
+                  child: Text(
+                    stat.label.resolve(locale).toUpperCase(),
+                    style: AppTextStyles.caption.copyWith(
+                      color: isDarkMode
+                          ? AppColors.neonYellow
+                          : AppColors.brutalRed,
+                    ),
                   ),
                 ),
                 Text(
                   stat.value,
-                  style: AppTextStyles.h3.copyWith(color: AppColors.neonBlue),
+                  style: AppTextStyles.h3.copyWith(
+                    color: isDarkMode ? AppColors.white : AppColors.black,
+                  ),
                 ),
               ],
             ),
@@ -947,93 +939,333 @@ class _StatPanel extends StatelessWidget {
   }
 }
 
-class _TagChip extends StatelessWidget {
-  const _TagChip({
-    required this.label,
+class _ProjectRowCard extends StatefulWidget {
+  const _ProjectRowCard({
     required this.isDarkMode,
-  });
-
-  final String label;
-  final bool isDarkMode;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isDarkMode
-            ? AppColors.neonBlue.withValues(alpha: 0.13)
-            : AppColors.neonBlue.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: AppColors.neonBlue.withValues(alpha: 0.24),
-        ),
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.caption.copyWith(
-          color: isDarkMode ? AppColors.textLight : AppColors.textDark,
-        ),
-      ),
-    );
-  }
-}
-
-class _LinkButton extends StatelessWidget {
-  const _LinkButton({
-    required this.label,
-    required this.icon,
+    required this.title,
+    required this.description,
+    required this.stack,
     required this.url,
-    required this.isDarkMode,
+    required this.accent,
+    this.reverse = false,
   });
 
-  final String label;
-  final IconData icon;
-  final String url;
   final bool isDarkMode;
+  final String title;
+  final String description;
+  final List<String> stack;
+  final String url;
+  final Color accent;
+  final bool reverse;
+
+  @override
+  State<_ProjectRowCard> createState() => _ProjectRowCardState();
+}
+
+class _ProjectRowCardState extends State<_ProjectRowCard> {
+  bool _isHovering = false;
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: () => _launch(url),
-      style: OutlinedButton.styleFrom(
-        side: BorderSide(color: AppColors.neonBlue.withValues(alpha: 0.35)),
-        foregroundColor: isDarkMode ? AppColors.textLight : AppColors.textDark,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    final Widget content = NeoBrutalCard(
+      isDarkMode: widget.isDarkMode,
+      backgroundColor: widget.isDarkMode ? AppColors.cardDark : AppColors.white,
+      offset: _isHovering ? const Offset(12, 12) : const Offset(8, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  widget.title.toUpperCase(),
+                  style: AppTextStyles.h3.copyWith(
+                    color:
+                        widget.isDarkMode ? AppColors.white : AppColors.black,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  widget.description,
+                  style: AppTextStyles.body2.copyWith(
+                    color: widget.isDarkMode
+                        ? AppColors.lightGray
+                        : AppColors.black,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: widget.stack
+                      .map((String item) => _SkillPill(
+                            label: item.toUpperCase(),
+                            isDarkMode: widget.isDarkMode,
+                            accent: widget.accent,
+                          ))
+                      .toList(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          InkWell(
+            onTap: () => _launch(widget.url),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: widget.accent,
+                border: Border.all(color: AppColors.black, width: 2),
+              ),
+              child: const Icon(Icons.open_in_new, color: AppColors.black),
+            ),
+          ),
+        ],
       ),
-      icon: Icon(icon, size: 16),
-      label: Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+    );
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        transform: Matrix4.translationValues(0, _isHovering ? -4 : 0, 0),
+        child: content,
+      ),
     );
   }
 }
 
-class _InlineInfo extends StatelessWidget {
-  const _InlineInfo({
-    required this.icon,
-    required this.label,
+class _TimelineTile extends StatelessWidget {
+  const _TimelineTile({
     required this.isDarkMode,
+    required this.yearRange,
+    required this.title,
+    required this.organization,
+    required this.description,
   });
 
-  final IconData icon;
-  final String label;
   final bool isDarkMode;
+  final String yearRange;
+  final String title;
+  final String organization;
+  final String description;
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Icon(icon, size: 15, color: AppColors.neonBlue),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: AppTextStyles.caption.copyWith(
-            color: isDarkMode
-                ? AppColors.textLight.withValues(alpha: 0.8)
-                : AppColors.textDark.withValues(alpha: 0.8),
+        Container(
+          width: 10,
+          height: 96,
+          color: isDarkMode ? AppColors.neonYellow : AppColors.brutalRed,
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: NeoBrutalCard(
+            isDarkMode: isDarkMode,
+            backgroundColor: isDarkMode ? AppColors.cardDark : AppColors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  yearRange,
+                  style: AppTextStyles.caption.copyWith(
+                    color:
+                        isDarkMode ? AppColors.neonYellow : AppColors.brutalRed,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  title,
+                  style: AppTextStyles.h3.copyWith(
+                    color: isDarkMode ? AppColors.white : AppColors.black,
+                  ),
+                ),
+                Text(
+                  organization,
+                  style: AppTextStyles.caption.copyWith(
+                    color:
+                        isDarkMode ? AppColors.lightGray : AppColors.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: AppTextStyles.body2.copyWith(
+                    color: isDarkMode ? AppColors.white : AppColors.black,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SkillPill extends StatelessWidget {
+  const _SkillPill({
+    required this.label,
+    required this.isDarkMode,
+    this.accent,
+  });
+
+  final String label;
+  final bool isDarkMode;
+  final Color? accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color base =
+        accent ?? (isDarkMode ? AppColors.neonYellow : AppColors.brutalRed);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: base,
+        border: Border.all(color: AppColors.black, width: 1.5),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.caption.copyWith(color: AppColors.black),
+      ),
+    );
+  }
+}
+
+class _ActionTag extends StatefulWidget {
+  const _ActionTag({
+    required this.label,
+    required this.onTap,
+    required this.isDarkMode,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final bool isDarkMode;
+
+  @override
+  State<_ActionTag> createState() => _ActionTagState();
+}
+
+class _ActionTagState extends State<_ActionTag> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bg =
+        widget.isDarkMode ? AppColors.neonYellow : AppColors.brutalRed;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          transform: Matrix4.translationValues(0, _hover ? -3 : 0, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: bg,
+            border: Border.all(color: AppColors.black, width: 2),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: AppColors.black.withValues(alpha: 0.65),
+                blurRadius: 0,
+                offset: const Offset(4, 4),
+              ),
+            ],
+          ),
+          child: Text(
+            widget.label,
+            style: AppTextStyles.caption.copyWith(color: AppColors.black),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ControlButton extends StatelessWidget {
+  const _ControlButton({
+    required this.icon,
+    required this.onTap,
+    required this.isDarkMode,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool isDarkMode;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: isDarkMode ? AppColors.neonYellow : AppColors.brutalRed,
+          border: Border.all(color: AppColors.black, width: 2),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: AppColors.black.withValues(alpha: 0.6),
+              blurRadius: 0,
+              offset: const Offset(4, 4),
+            ),
+          ],
+        ),
+        child: Icon(icon, color: AppColors.black, size: 20),
+      ),
+    );
+  }
+}
+
+class _FloatingCta extends StatefulWidget {
+  const _FloatingCta({required this.isDarkMode});
+
+  final bool isDarkMode;
+
+  @override
+  State<_FloatingCta> createState() => _FloatingCtaState();
+}
+
+class _FloatingCtaState extends State<_FloatingCta> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: () => _launch('mailto:alvarocarlisbino@gmail.com'),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          transform: Matrix4.translationValues(0, _hover ? -4 : 0, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: widget.isDarkMode ? AppColors.acidGreen : AppColors.neonBlue,
+            border: Border.all(color: AppColors.black, width: 2),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: AppColors.black,
+                blurRadius: 0,
+                offset: Offset(5, 5),
+              ),
+            ],
+          ),
+          child: Text(
+            'CONTACT',
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+              color: AppColors.black,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1050,35 +1282,25 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Text(
-            'Falha ao carregar portfolio',
-            style: AppTextStyles.h3.copyWith(
-              color: isDarkMode ? AppColors.textLight : AppColors.textDark,
+      child: NeoBrutalCard(
+        isDarkMode: isDarkMode,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(
+              'Falha ao carregar portfolio',
+              style: AppTextStyles.h3.copyWith(
+                color: isDarkMode ? AppColors.white : AppColors.black,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton(
-              onPressed: onRetry, child: const Text('Tentar novamente')),
-        ],
+            const SizedBox(height: 10),
+            ElevatedButton(
+                onPressed: onRetry, child: const Text('Tentar novamente')),
+          ],
+        ),
       ),
     );
   }
-}
-
-BoxDecoration _panelDecoration(bool isDarkMode) {
-  return BoxDecoration(
-    color: isDarkMode ? AppColors.cardDark : Colors.white,
-    borderRadius: BorderRadius.circular(20),
-    border: Border.all(
-      color: isDarkMode
-          ? AppColors.neonBlue.withValues(alpha: 0.2)
-          : AppColors.neonBlue.withValues(alpha: 0.16),
-    ),
-    boxShadow: AppColors.cardShadow,
-  );
 }
 
 Future<void> _launch(String value) async {
